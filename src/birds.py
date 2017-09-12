@@ -9,7 +9,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.collections import PathCollection
 
 class Flock:
-    def __init__(self, n=500, width=640, height=380):
+    def __init__(self, n=500, width=640, height=480):
         self.velocity = np.zeros((n,2),dtype=np.float32)
         self.position = np.zeros((n,2),dtype=np.float32)
 

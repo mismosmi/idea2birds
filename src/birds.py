@@ -25,11 +25,43 @@ class Flock:
     def calc_alignment(self):
         pass
 
-    def calc_cohesion(self):
-        pass
+    def calc_cohesion(self, mask, count):
+        # Compute the gravity center of local neighbours
+        center = np.dot(mask, self.position)/count.reshape(n, 1)
+        
+        # Compute direction toward the center
+        target = center - self.position
+        
+        # Normalize the result
+        norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
+        target *= np.divide(target, norm, out=target, where=norm != 0)
+        
+        # Cohesion at constant speed (max_velocity)
+        target *= max_velocity
+        
+        # Compute the resulting steering
+        self.cohesion = target - velocity
 
     def calc_separation(self):
-        pass
+        # Compute the repulsion force from local neighbours
+        repulsion = np.dstack((self.dx, self.dy))
+        
+        # Force is inversely proportional to the distance
+        repulsion = np.divide(repulsion, distance.reshape(self.n, self.n, 1)**2, out=repulsion,
+                              where=distance.reshape(self.n, self.n, 1) != 0)
+        
+        # Compute direction away from others
+        target = (repulsion*mask.reshape(self.n, self.n, 1)).sum(axis=1)/count.reshape(self.n, 1)
+        
+        # Normalize the result
+        norm = np.sqrt((target*target).sum(axis=1)).reshape(self.n, 1)
+        target *= np.divide(target, norm, out=target, where=norm != 0)
+        
+        # Separation at constant speed (max_velocity)
+        target *= max_velocity
+        
+        # Compute the resulting steering
+        self.separation = target - self.velocity
 
 
 class MarkerCollection:

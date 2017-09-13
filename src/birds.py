@@ -12,12 +12,22 @@ class Flock:
     def __init__(self, n=500, width=640, height=480):
         self.velocity = np.zeros((n,2),dtype=np.float32)
         self.position = np.zeros((n,2),dtype=np.float32)
+        self.r = 10  # Radius of influence
+        self.max_velocity = 1
+        self.mu = .5  # noice
 
-        
-        
+        self.position[:, 0] = np.random.uniform(0, width, n)
+        self.position[:, 1] = np.random.uniform(0, height, n)
+        self.velocity[:, 0] = np.random.uniform(-1, 1, n) * self.max_velocity
+        self.velocity[:, 1] = np.random.uniform(-1, 1, n) * self.max_velocity
 
     def run(self):
-        pass
+        self.velocity = self.calc_velocities()
+        self.position += self.velocity
+
+        # Wrap around
+        self.position[:, 0] %= width
+        self.position[:, 1] %= height
 
     def calc_distance(self):
         """
@@ -30,6 +40,41 @@ class Flock:
 
         # return hypotenuse of corresponding elements i.e. distance
         return np.hypot(dx, dy)
+
+    def calc_velocities(self):
+        """
+        Calculate updated velocities. New angles are calculated as
+        theta = arctan( <\sin(theta_r)> / <cos(theta_r)>
+        with theta_r being radius in which bird is influenced by others
+        """
+        distance = self.calc_distance()
+
+        # Masks tell whether or not a condition is met for a given element
+        # Result is an array containing True or False
+        mask_zero = (0 <= distance)  # Only look at positive distances
+        mask_radius = (distance < self.r)  # Only fetch birds within radius r
+        mask = mask_zero * mask_radius
+        count = mask.sum(axis=1)
+
+        # Get average values of direction
+        vx_avg = np.sum(mask * self.velocity[:, 0],axis=1) / count
+        vy_avg = np.sum(mask * self.velocity[:, 1],axis=1) / count
+
+        # Calculate average angle as in Vicsek_SPP
+        angle_avg = np.arctan((vx_avg / self.max_velocity) / (vy_avg / self.max_velocity))
+
+        # Add noice
+        angle_avg += np.random.uniform(-self.mu,self.mu,len(angle_avg))
+
+
+        velocities = np.zeros((n, 2), dtype=float)
+        velocities[:, 0] = -np.cos(angle_avg)
+        velocities[:, 1] = np.sin(angle_avg)
+
+        return velocities * self.max_velocity
+        
+
+        
 
     def calc_alignment(self):
         pass
@@ -130,7 +175,7 @@ def update(*args):
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    n = 500
+    n = 300
     width, height = 640, 360
     flock = Flock(n)
     fig = plt.figure(figsize=(10, 10*height/width), facecolor="white")
@@ -149,9 +194,9 @@ if __name__ == '__main__':
         im = ax.imshow(trace, extent=[0, width, 0, height], vmin=0, vmax=1,
                        interpolation="nearest", cmap=plt.cm.gray_r)
 
-    animation = FuncAnimation(fig, update, interval=10, frames=1000)
-    animation.save('boid.mp4', fps=40, dpi=80, bitrate=-1, codec="libx264",
-                   extra_args=['-pix_fmt', 'yuv420p'],
-                   metadata={'artist': 'Nicolas P. Rougier'})
+    animation = FuncAnimation(fig, update, interval=10, frames=10)
+    # animation.save('boid.mp4', fps=40, dpi=80, bitrate=-1, codec="libx264",
+    #                extra_args=['-pix_fmt', 'yuv420p'],
+    #                metadata={'artist': 'Nicolas P. Rougier'})
     plt.show()
 

@@ -9,10 +9,10 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.collections import PathCollection
 
 class Flock:
-    def __init__(self, n=500, width=640, height=480):
-        self.velocity = np.zeros((n,2),dtype=np.float32)
-        self.position = np.zeros((n,2),dtype=np.float32)
-
+    def __init__(self, n=500, max_vel=1, width=640, height=480):
+       self.velocity = np.random.rand(n,2)*max_vel
+       self.position = np.random.rand(n,2)*(np.array([width, height]))
+        
         
         
 

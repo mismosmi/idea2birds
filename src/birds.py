@@ -10,8 +10,9 @@ from matplotlib.collections import PathCollection
 
 class Flock:
     def __init__(self, n=500, max_vel=1, width=640, height=480):
-       self.velocity = np.random.rand(n,2)*max_vel
-       self.position = np.random.rand(n,2)*(np.array([width, height]))
+        self.velocity = np.random.rand(n,2)*max_vel
+        self.position = np.random.rand(n,2)*(np.resize(
+            np.array([width, height]),(n,2)))
         
         
         

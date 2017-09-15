@@ -20,7 +20,16 @@ class Flock:
         pass
 
     def calc_distance(self):
-        pass
+        """
+        Calculate distance between birds. Return n x n array with each row
+        corresponding to each bird's distance to the others
+        """
+        # subtract each element of the position array from the others
+        dx = np.subtract.outer(self.position[:, 0], self.position[:, 0])
+        dy = np.subtract.outer(self.position[:, 1], self.position[:, 1])
+
+        # return hypotenuse of corresponding elements i.e. distance
+        return np.hypot(dx, dy)
 
     def calc_alignment(self):
         pass

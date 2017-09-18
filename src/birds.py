@@ -18,7 +18,7 @@ class Flock:
 
         self.position[:, 0] = np.random.uniform(0, width, n)
         self.position[:, 1] = np.random.uniform(0, height, n)
-        self.angles = np.random.uniform(0, 2*np.pi)
+        self.angles = np.random.uniform(0, 2*np.pi, n)
         self.velocity[:, 0] = np.cos(self.angles) * self.max_velocity
         self.velocity[:, 1] = np.sin(self.angles) * self.max_velocity
 
@@ -61,7 +61,9 @@ class Flock:
         cos_avg = np.sum(mask * np.cos(self.angles), axis=1) / count
         sin_avg = np.sum(mask * np.sin(self.angles), axis=1) / count
 
+        # Compute new angles
         angles_avg = np.arctan(sin_avg / cos_avg)
+        angles_avg += np.pi*(cos_avg < 0)
         angles_avg += np.random.uniform(-self.mu, self.mu, len(angles_avg))
 
         self.angles = angles_avg

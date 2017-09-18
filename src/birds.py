@@ -13,21 +13,22 @@ class Flock:
         self.velocity = np.zeros((n,2),dtype=np.float32)
         self.position = np.zeros((n,2),dtype=np.float32)
         self.r = 10  # Radius of influence
-        self.max_velocity = 1
-        self.mu = .5  # noice
+        self.max_velocity = 1.0
+        self.mu = .1  # noice
 
         self.position[:, 0] = np.random.uniform(0, width, n)
         self.position[:, 1] = np.random.uniform(0, height, n)
-        self.velocity[:, 0] = np.random.uniform(-1, 1, n) * self.max_velocity
-        self.velocity[:, 1] = np.random.uniform(-1, 1, n) * self.max_velocity
+        self.angles = np.random.uniform(0, 2*np.pi)
+        self.velocity[:, 0] = np.cos(self.angles) * self.max_velocity
+        self.velocity[:, 1] = np.sin(self.angles) * self.max_velocity
 
     def run(self):
         self.velocity = self.calc_velocities()
         self.position += self.velocity
 
         # Wrap around
-        self.position[:, 0] %= width
-        self.position[:, 1] %= height
+        self.position += [width, height]
+        self.position %= [width, height]
 
     def calc_distance(self):
         """
@@ -57,19 +58,18 @@ class Flock:
         count = mask.sum(axis=1)
 
         # Get average values of direction
-        vx_avg = np.sum(mask * self.velocity[:, 0],axis=1) / count
-        vy_avg = np.sum(mask * self.velocity[:, 1],axis=1) / count
+        cos_avg = np.sum(mask * np.cos(self.angles), axis=1) / count
+        sin_avg = np.sum(mask * np.sin(self.angles), axis=1) / count
 
-        # Calculate average angle as in Vicsek_SPP
-        angle_avg = np.arctan((vx_avg / self.max_velocity) / (vy_avg / self.max_velocity))
+        angles_avg = np.arctan(sin_avg / cos_avg)
+        angles_avg += np.random.uniform(-self.mu, self.mu, len(angles_avg))
 
-        # Add noice
-        angle_avg += np.random.uniform(-self.mu,self.mu,len(angle_avg))
+        self.angles = angles_avg
 
-
+        # Update velocities
         velocities = np.zeros((n, 2), dtype=float)
-        velocities[:, 0] = -np.cos(angle_avg)
-        velocities[:, 1] = np.sin(angle_avg)
+        velocities[:, 0] = np.cos(angles_avg)
+        velocities[:, 1] = np.sin(angles_avg)
 
         return velocities * self.max_velocity
         

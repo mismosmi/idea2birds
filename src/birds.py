@@ -62,8 +62,8 @@ class Flock:
         sin_avg = np.sum(mask * np.sin(self.angles), axis=1) / count
 
         # Compute new angles
-        angles_avg = np.arctan(sin_avg / cos_avg)
-        angles_avg += np.pi*(cos_avg < 0)
+        angles_avg = np.arctan2(sin_avg, cos_avg)
+        #angles_avg += np.pi*(cos_avg < 0)
         angles_avg += np.random.uniform(-self.mu, self.mu, len(angles_avg))
 
         self.angles = angles_avg

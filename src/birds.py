@@ -9,16 +9,49 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.collections import PathCollection
 
 class Flock:
-    def __init__(self, n=500, max_vel=1, width=640, height=480):
-        self.velocity = np.random.rand(n,2)*max_vel
-        self.position = np.random.rand(n,2)*(np.resize(
-            np.array([width, height]),(n,2)))
+    def __init__(self, n=500, max_velocity=1., width=640, height=480, 
+    max_separation=.01, max_alignment=.01, max_cohesion=.01,):
+        angles = np.random.rand(n).astype(np.float32)*2*np.pi
+        self.velocity = np.zeros((n,2))
+        self.velocity[:,0] = np.cos(angles)*max_velocity
+        self.velocity[:,1] = np.sin(angles)*max_velocity
+        self.wh = np.resize(np.array([width, height],dtype=np.float32),(n,2))
+        self.position = np.random.rand(n,2).astype(np.float32)*self.wh
+
+        self.n = n
+        self.max_velocity = max_velocity
+        self.max_separation = np.ones((n,2),dtype=np.float32)*max_separation
+        self.max_alignment = np.ones((n,2),dtype=np.float32)*max_alignment
+        self.max_cohesion = np.ones((n,2),dtype=np.float32)*max_cohesion
         
         
         
 
     def run(self):
-        pass
+        self.distance = self.calc_distance()
+        
+        mask_0 = (self.distance > 0)
+        mask_1 = (self.distance < 25)
+        mask_2 = (self.distance < 50)
+        mask_1 *= mask_0
+        mask_2 *= mask_0
+        mask_3 = mask_2
+
+        mask_1_count = np.maximum(mask_1.sum(axis=1), 1)
+        mask_2_count = np.maximum(mask_2.sum(axis=1), 1)
+        mask_3_count = mask_2_count
+
+        separation = np.maximum(self.calc_separation(mask_1,mask_1_count),
+            self.max_separation)
+        alignment = np.maximum(self.calc_alignment(mask_2,mask_2_count),
+            self.max_alignment)
+        cohesion = np.maximum(self.calc_cohesion(mask_3,mask_3_count),
+            self.max_cohesion)
+
+        acceleration = 1.5 * separation + alignment + cohesion
+        self.velocity += acceleration
+        self.position += self.velocity
+        self.position %= self.wh
 
     def calc_distance(self):
         """
@@ -26,14 +59,26 @@ class Flock:
         corresponding to each bird's distance to the others
         """
         # subtract each element of the position array from the others
-        dx = np.subtract.outer(self.position[:, 0], self.position[:, 0])
-        dy = np.subtract.outer(self.position[:, 1], self.position[:, 1])
+        self.dx = np.subtract.outer(self.position[:, 0], self.position[:, 0])
+        self.dy = np.subtract.outer(self.position[:, 1], self.position[:, 1])
 
         # return hypotenuse of corresponding elements i.e. distance
-        return np.hypot(dx, dy)
+        return np.hypot(self.dx, self.dy)
 
-    def calc_alignment(self):
-        pass
+    def calc_alignment(self, mask, count):
+        # Compute the average velocity of local neighbours
+        target = np.dot(mask, self.velocity)/count.reshape(n, 1)
+
+        # Normalize the result
+        norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
+        target *= np.divide(target, norm, out=target, where=norm != 0)
+        
+        # Alignment at constant speed
+        target *= self.max_velocity
+        
+        # Compute the resulting steering
+        return target - self.velocity
+
 
     def calc_cohesion(self, mask, count):
         # Compute the gravity center of local neighbours
@@ -47,18 +92,18 @@ class Flock:
         target *= np.divide(target, norm, out=target, where=norm != 0)
         
         # Cohesion at constant speed (max_velocity)
-        target *= max_velocity
+        target *= self.max_velocity
         
         # Compute the resulting steering
-        self.cohesion = target - velocity
+        return target - self.velocity
 
-    def calc_separation(self):
+    def calc_separation(self, mask, count):
         # Compute the repulsion force from local neighbours
         repulsion = np.dstack((self.dx, self.dy))
         
         # Force is inversely proportional to the distance
-        repulsion = np.divide(repulsion, distance.reshape(self.n, self.n, 1)**2, out=repulsion,
-                              where=distance.reshape(self.n, self.n, 1) != 0)
+        repulsion = np.divide(repulsion, self.distance.reshape(self.n, self.n, 1)**2, out=repulsion,
+                              where=self.distance.reshape(self.n, self.n, 1) != 0)
         
         # Compute direction away from others
         target = (repulsion*mask.reshape(self.n, self.n, 1)).sum(axis=1)/count.reshape(self.n, 1)
@@ -68,10 +113,10 @@ class Flock:
         target *= np.divide(target, norm, out=target, where=norm != 0)
         
         # Separation at constant speed (max_velocity)
-        target *= max_velocity
+        target *= self.max_velocity
         
         # Compute the resulting steering
-        self.separation = target - self.velocity
+        return target - self.velocity
 
 
 class MarkerCollection:
@@ -151,8 +196,8 @@ if __name__ == '__main__':
                        interpolation="nearest", cmap=plt.cm.gray_r)
 
     animation = FuncAnimation(fig, update, interval=10, frames=1000)
-    animation.save('boid.mp4', fps=40, dpi=80, bitrate=-1, codec="libx264",
-                   extra_args=['-pix_fmt', 'yuv420p'],
-                   metadata={'artist': 'Nicolas P. Rougier'})
+    #animation.save('boid.mp4', fps=40, dpi=80, bitrate=-1, codec="libx264",
+    #               extra_args=['-pix_fmt', 'yuv420p'],
+    #               metadata={'artist': 'Nicolas P. Rougier'})
     plt.show()
 

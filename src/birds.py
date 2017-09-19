@@ -2,29 +2,40 @@
 #                       idea2birds                                             #
 #                   Bird simulation in python                                  #
 ################################################################################
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from matplotlib.animation import FuncAnimation
 from matplotlib.collections import PathCollection
 
-class Flock:
-    def __init__(self, n=500, max_velocity=1., width=640, height=480, 
-    max_separation=.01, max_alignment=.01, max_cohesion=.01,):
-        angles = np.random.rand(n).astype(np.float32)*2*np.pi
-        self.velocity = np.zeros((n,2))
-        self.velocity[:,0] = np.cos(angles)*max_velocity
-        self.velocity[:,1] = np.sin(angles)*max_velocity
-        self.wh = np.resize(np.array([width, height],dtype=np.float32),(n,2))
-        self.position = np.random.rand(n,2).astype(np.float32)*self.wh
+width, height, n = 640, 480, 500
 
-        self.n = n
+def limit(target, upperbound=False, lowerbound=False):
+    norm = np.sqrt((target*target).sum(axis=1)).reshape(n,1)
+    if upperbound:
+        target = np.multiply(target, upperbound/norm, out=target, where=norm > upperbound)
+    if lowerbound:
+        target = np.multiply(target, lowerbound/norm, out=target, where=norm < lowerbound)
+    return target
+
+
+
+class Flock:
+    def __init__(self, angle_view=30, max_velocity=1., max_acceleration=0.03):
+        angle_view, max_velocity, max_acceleration = float(angle_view), float(max_velocity), float(max_acceleration)
+        angles = np.random.rand(n)*2*np.pi
+        self.velocity = np.ones((n,2),dtype=np.float32)*np.random.rand(n).repeat(2).reshape((n,2))*max_velocity
+        self.velocity[:,0] *= np.cos(angles)
+        self.velocity[:,1] *= np.sin(angles)
+        self.position = np.random.rand(n,2).astype(np.float32)*[width,height]
+
         self.max_velocity = max_velocity
-        self.max_separation = np.ones((n,2),dtype=np.float32)*max_separation
-        self.max_alignment = np.ones((n,2),dtype=np.float32)*max_alignment
-        self.max_cohesion = np.ones((n,2),dtype=np.float32)*max_cohesion
+        self.max_acceleration = max_acceleration
         
-        
+        print('velocity:')
+        print(self.velocity)
+        print('velocity ende')
         
 
     def run(self):
@@ -37,21 +48,22 @@ class Flock:
         mask_2 *= mask_0
         mask_3 = mask_2
 
-        mask_1_count = np.maximum(mask_1.sum(axis=1), 1).reshape(self.n,1)
-        mask_2_count = np.maximum(mask_2.sum(axis=1), 1).reshape(self.n,1)
+        mask_1_count = np.maximum(mask_1.sum(axis=1), 1).reshape(n,1)
+        mask_2_count = np.maximum(mask_2.sum(axis=1), 1).reshape(n,1)
         mask_3_count = mask_2_count
 
-        separation = np.maximum(self.calc_separation(mask_1,mask_1_count),
-            self.max_separation)
-        alignment = np.maximum(self.calc_alignment(mask_2,mask_2_count),
-            self.max_alignment)
-        cohesion = np.maximum(self.calc_cohesion(mask_3,mask_3_count),
-            self.max_cohesion)
+        separation = self.calc_separation(mask_1,mask_1_count)
+        alignment = self.calc_alignment(mask_2,mask_2_count)
+        cohesion = self.calc_cohesion(mask_3,mask_3_count)
 
-        acceleration = 1.5 * separation + alignment + cohesion
-        self.velocity += acceleration
+
+        #acceleration = 1.5 * separation + alignment + cohesion
+        acceleration = 1.5 * separation
+        #acceleration = 1.5 * separation + alignment + cohesion
+        #acceleration = 1.5 * separation + alignment + cohesion
+        self.velocity = limit(self.velocity + acceleration, self.max_velocity)
         self.position += self.velocity
-        self.position %= self.wh
+        self.position %= [width, height]
 
     def calc_distance(self):
         """
@@ -70,14 +82,16 @@ class Flock:
         target = np.dot(mask, self.velocity)/count
 
         # Normalize the result
-        norm = np.sqrt((target*target).sum(axis=1)).reshape(self.n, 1)
+        norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
         target *= np.divide(target, norm, out=target, where=norm != 0)
         
         # Alignment at constant speed
         target *= self.max_velocity
         
         # Compute the resulting steering
-        return target - self.velocity
+        target -= self.velocity
+
+        return limit(target, self.max_acceleration)
 
 
     def calc_cohesion(self, mask, count):
@@ -95,28 +109,33 @@ class Flock:
         target *= self.max_velocity
         
         # Compute the resulting steering
-        return target - self.velocity
+        target -= self.velocity
+
+        return limit(target, self.max_acceleration)
+
 
     def calc_separation(self, mask, count):
         # Compute the repulsion force from local neighbours
         repulsion = np.dstack((self.dx, self.dy))
         
         # Force is inversely proportional to the distance
-        repulsion = np.divide(repulsion, self.distance.reshape(self.n, self.n, 1)**2, out=repulsion,
-                              where=self.distance.reshape(self.n, self.n, 1) != 0)
+        repulsion = np.divide(repulsion, self.distance.reshape(n, n, 1)**2, out=repulsion, where=self.distance.reshape(n, n, 1) != 0)
         
         # Compute direction away from others
-        target = (repulsion*mask.reshape(self.n, self.n, 1)).sum(axis=1)/count
+        target = (repulsion*mask.reshape(n, n, 1)).sum(axis=1)/count
         
         # Normalize the result
-        norm = np.sqrt((target*target).sum(axis=1)).reshape(self.n, 1)
+        norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
         target *= np.divide(target, norm, out=target, where=norm != 0)
         
         # Separation at constant speed (max_velocity)
         target *= self.max_velocity
         
         # Compute the resulting steering
-        return target - self.velocity
+        target -= self.velocity
+
+        return limit(target, self.max_acceleration)
+
 
 
 class MarkerCollection:
@@ -175,10 +194,18 @@ def update(*args):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
+    
+    argc = len(sys.argv)
+    if argc > 4:
+        n = sys.argv[4]
+        if argc > 5:
+            width = sys.argv[5]
+            if argc > 6:
+                height = sys.argv[6]
+    if argc == 1:
+        print('Command Line Arguments: angle_view max_separation max_alignment max_cohesion max_velocity n width height')
 
-    n = 500
-    width, height = 640, 360
-    flock = Flock(n)
+    flock = Flock(*sys.argv[1:4])
     fig = plt.figure(figsize=(10, 10*height/width), facecolor="white")
     ax = fig.add_axes([0.0, 0.0, 1.0, 1.0], aspect=1, frameon=False)
     collection = MarkerCollection(n)

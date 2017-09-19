@@ -37,8 +37,8 @@ class Flock:
         mask_2 *= mask_0
         mask_3 = mask_2
 
-        mask_1_count = np.maximum(mask_1.sum(axis=1), 1)
-        mask_2_count = np.maximum(mask_2.sum(axis=1), 1)
+        mask_1_count = np.maximum(mask_1.sum(axis=1), 1).reshape(self.n,1)
+        mask_2_count = np.maximum(mask_2.sum(axis=1), 1).reshape(self.n,1)
         mask_3_count = mask_2_count
 
         separation = np.maximum(self.calc_separation(mask_1,mask_1_count),
@@ -67,10 +67,10 @@ class Flock:
 
     def calc_alignment(self, mask, count):
         # Compute the average velocity of local neighbours
-        target = np.dot(mask, self.velocity)/count.reshape(n, 1)
+        target = np.dot(mask, self.velocity)/count
 
         # Normalize the result
-        norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
+        norm = np.sqrt((target*target).sum(axis=1)).reshape(self.n, 1)
         target *= np.divide(target, norm, out=target, where=norm != 0)
         
         # Alignment at constant speed
@@ -82,7 +82,7 @@ class Flock:
 
     def calc_cohesion(self, mask, count):
         # Compute the gravity center of local neighbours
-        center = np.dot(mask, self.position)/count.reshape(n, 1)
+        center = np.dot(mask, self.position)/count
         
         # Compute direction toward the center
         target = center - self.position
@@ -106,7 +106,7 @@ class Flock:
                               where=self.distance.reshape(self.n, self.n, 1) != 0)
         
         # Compute direction away from others
-        target = (repulsion*mask.reshape(self.n, self.n, 1)).sum(axis=1)/count.reshape(self.n, 1)
+        target = (repulsion*mask.reshape(self.n, self.n, 1)).sum(axis=1)/count
         
         # Normalize the result
         norm = np.sqrt((target*target).sum(axis=1)).reshape(self.n, 1)

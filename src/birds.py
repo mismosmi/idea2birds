@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from matplotlib.animation import FuncAnimation
 from matplotlib.collections import PathCollection
+import time
 
-width, height, n = 640, 480, 2
+width, height, n = 640, 480, 500
 
 def limit(target, upperbound=False, lowerbound=False):
     norm = np.sqrt((target*target).sum(axis=1)).reshape(n,1)
@@ -22,19 +23,20 @@ def limit(target, upperbound=False, lowerbound=False):
 
 class Flock:
     def __init__(self, angle_view=30, max_velocity=1., max_acceleration=0.03):
-        angle_view, max_velocity, max_acceleration = float(angle_view), float(max_velocity), float(max_acceleration)
+        angle_view, max_velocity, max_acceleration = float(angle_view)/180*np.pi, float(max_velocity), float(max_acceleration)
         min_velocity = 0.1
 
         angles = np.random.uniform(0,2*np.pi,n)
-        self.velocity = (np.array([np.cos(angles),np.sin(angles)])*np.random.uniform(min_velocity,max_velocity,n)).T
-        #self.position = np.random.rand(n,2).astype(np.float32)*[width,height]
-        self.position = np.array([[width/2+15,height/2],[width/2-15,height/2]],dtype=np.float32)
+        self.velocity = (np.array([np.cos(angles),np.sin(angles)])*np.random.uniform(min_velocity,max_velocity,n)).astype(np.float32).T
+        self.position = np.random.rand(n,2).astype(np.float32)*[width,height]
+        #self.position = np.array([[width/2+15,height/2],[width/2-15,height/2]],dtype=np.float32)
 
 
         self.max_velocity = max_velocity
         self.min_velocity = min_velocity
         self.max_acceleration = max_acceleration
-        self.rad_alignment = 50
+        self.angle_view = angle_view
+
         
         print('velocity:')
         print(self.velocity)
@@ -45,9 +47,10 @@ class Flock:
         self.distance = self.calc_distance() 
 
         
-        mask_0 = (self.distance > 0)
+        mask_0 = np.absolute(np.arctan2(self.dy, self.dx) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view/2
+        mask_0 *= (self.distance > 0)
         mask_1 = (self.distance < 25)
-        mask_2 = (self.distance < self.rad_alignment)
+        mask_2 = (self.distance < 50)
         mask_1 *= mask_0
         mask_2 *= mask_0
         mask_3 = mask_2
@@ -61,14 +64,16 @@ class Flock:
         cohesion = self.calc_cohesion(mask_3,mask_3_count)
 
 
-        #acceleration = 1.5 * separation + alignment + cohesion
+        acceleration = 1.5 * separation + alignment + cohesion
         #acceleration = 1.5 * separation
-        acceleration = alignment
+        #acceleration = alignment
         #acceleration = cohesion
         self.velocity += acceleration
+        self.random_turn()
         limit(self.velocity, self.max_velocity, self.min_velocity)
         self.position += self.velocity
         self.position %= [width, height]
+
 
     def calc_distance(self):
         """
@@ -76,12 +81,12 @@ class Flock:
         corresponding to each bird's distance to the others
         """
         # subtract each element of the position array from the others
-        self.dx = np.subtract.outer(self.position[:, 0], self.position[:, 0]) 
-        self.dy = np.subtract.outer(self.position[:, 1], self.position[:, 1]) 
+        self.dx = np.absolute(np.subtract.outer(self.position[:, 0], self.position[:, 0]))
+        self.dy = np.absolute(np.subtract.outer(self.position[:, 1], self.position[:, 1]))
         
         # wrap around
-        np.subtract(width, self.dx, out=self.dx, where=self.dx > width/2)
-        np.subtract(height, self.dy, out=self.dy, where=self.dy > height/2)
+        np.subtract(width+1, self.dx, out=self.dx, where=self.dx > width/2)
+        np.subtract(height+1, self.dy, out=self.dy, where=self.dy > height/2)
 
         # return hypotenuse of corresponding elements i.e. distance
         return np.hypot(self.dx, self.dy)
@@ -90,14 +95,9 @@ class Flock:
         # Compute the average velocity of local neighbours
         target = np.dot(mask, self.velocity)/count
 
-        # Normalize the result
+        # Compute steering
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
-        target *= np.divide(target, norm, out=target, where=norm != 0)
-        
-        # Alignment at constant speed
-        target *= self.max_velocity
-        
-        # Compute the resulting steering
+        target = self.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
         target -= self.velocity
 
         limit(target, self.max_acceleration)
@@ -113,10 +113,7 @@ class Flock:
         
         # Normalize the result
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
-        target *= np.divide(target, norm, out=target, where=norm != 0)
-        
-        # Cohesion at constant speed (max_velocity)
-        target *= self.max_velocity
+        target = self.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
         
         # Compute the resulting steering
         target -= self.velocity
@@ -137,7 +134,7 @@ class Flock:
         
         # Normalize the result
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
-        target *= np.divide(target, norm, out=target, where=norm != 0)
+        target = self.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
         
         # Separation at constant speed (max_velocity)
         target *= self.max_velocity
@@ -147,6 +144,15 @@ class Flock:
 
         limit(target, self.max_acceleration)
         return target
+
+    def random_turn(self):
+        angles = np.random.normal(0,self.angle_view*0.1,n)
+        c = np.cos(angles)
+        s = np.sin(angles)
+        self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s
+        self.velocity[:,1] = self.velocity[:,1]*c + self.velocity[:,0]*s
+        return
+        
 
 
 

@@ -47,12 +47,12 @@ class Flock:
         self.distance = self.calc_distance() 
 
         
-        mask_0 = np.absolute(np.arctan2(self.dy, self.dx) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view/2
-        mask_0 *= (self.distance > 0)
+        #mask_view = np.absolute(np.arctan2(self.dy, self.dx) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view/2
+        mask_0 = (self.distance > 0)
         mask_1 = (self.distance < 25)
         mask_2 = (self.distance < 50)
         mask_1 *= mask_0
-        mask_2 *= mask_0
+        mask_2 *= mask_0#*mask_view
         mask_3 = mask_2
 
         mask_1_count = np.maximum(mask_1.sum(axis=1), 1).reshape(n,1)
@@ -81,15 +81,17 @@ class Flock:
         corresponding to each bird's distance to the others
         """
         # subtract each element of the position array from the others
-        self.dx = np.absolute(np.subtract.outer(self.position[:, 0], self.position[:, 0]))
-        self.dy = np.absolute(np.subtract.outer(self.position[:, 1], self.position[:, 1]))
+        self.dx = np.subtract.outer(self.position[:, 0], self.position[:, 0])
+        self.dy = np.subtract.outer(self.position[:, 1], self.position[:, 1])
+        dx = np.absolute(self.dx)
+        dy = np.absolute(self.dy)
         
         # wrap around
-        np.subtract(width+1, self.dx, out=self.dx, where=self.dx > width/2)
-        np.subtract(height+1, self.dy, out=self.dy, where=self.dy > height/2)
+        np.subtract(width+1, dx, out=dx, where=dx > width/2)
+        np.subtract(height+1, dy, out=dy, where=dy > height/2)
 
         # return hypotenuse of corresponding elements i.e. distance
-        return np.hypot(self.dx, self.dy)
+        return np.hypot(dx, dy)
 
     def calc_alignment(self, mask, count):
         # Compute the average velocity of local neighbours
@@ -127,7 +129,7 @@ class Flock:
         repulsion = np.dstack((self.dx, self.dy))
         
         # Force is inversely proportional to the distance
-        repulsion = np.divide(repulsion, self.distance.reshape(n, n, 1)**2, out=repulsion, where=self.distance.reshape(n, n, 1) != 0)
+        np.divide(repulsion, self.distance.reshape(n, n, 1)**2, out=repulsion, where=self.distance.reshape(n, n, 1) != 0)
         
         # Compute direction away from others
         target = (repulsion*mask.reshape(n, n, 1)).sum(axis=1)/count
@@ -135,9 +137,6 @@ class Flock:
         # Normalize the result
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
         target = self.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
-        
-        # Separation at constant speed (max_velocity)
-        target *= self.max_velocity
         
         # Compute the resulting steering
         target -= self.velocity

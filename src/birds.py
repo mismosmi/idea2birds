@@ -13,6 +13,7 @@ import time
 width, height, n = 640, 480, 500
 
 def limit(target, upperbound=False, lowerbound=False):
+# Multiplies Vector by a factor so that lowerbound < |v| < upperbound
     norm = np.sqrt((target*target).sum(axis=1)).reshape(n,1)
     if upperbound:
         np.multiply(target, upperbound/norm, out=target, where=norm > upperbound)
@@ -23,9 +24,12 @@ def limit(target, upperbound=False, lowerbound=False):
 
 class Flock:
     def __init__(self, angle_view=30, max_velocity=1., max_acceleration=0.03):
+        # typecast for command line argument input + angle deg->rad
         angle_view, max_velocity, max_acceleration = float(angle_view)/180*np.pi, float(max_velocity), float(max_acceleration)
-        min_velocity = 0.1
+        # minimum velocity, basically only matters for birds that lose their flocks.
+        min_velocity = 0.5
 
+        # randomly distributed starting velocities, might come out pretty much the same as if you just set self.velocity = np.zeros((n,2),dtype=np.float32) but avoids division by zero.
         angles = np.random.uniform(0,2*np.pi,n)
         self.velocity = (np.array([np.cos(angles),np.sin(angles)])*np.random.uniform(min_velocity,max_velocity,n)).astype(np.float32).T
         self.position = np.random.rand(n,2).astype(np.float32)*[width,height]
@@ -37,22 +41,18 @@ class Flock:
         self.max_acceleration = max_acceleration
         self.angle_view = angle_view
 
-        
-        print('velocity:')
-        print(self.velocity)
-        print('velocity ende')
-        
 
     def run(self):
         self.distance = self.calc_distance() 
 
         
-        #mask_view = np.absolute(np.arctan2(self.dy, self.dx) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view/2
+        # check if viewing-angle (theta_velocity) += angle_view/2 matches distance-vector to neighbors (theta(pos1-pos2))
+        mask_view = np.absolute(np.arctan2(self.dy, self.dx) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view/2
         mask_0 = (self.distance > 0)
         mask_1 = (self.distance < 25)
         mask_2 = (self.distance < 50)
-        mask_1 *= mask_0
-        mask_2 *= mask_0#*mask_view
+        mask_1 *= mask_0*mask_view
+        mask_2 *= mask_0*mask_view
         mask_3 = mask_2
 
         mask_1_count = np.maximum(mask_1.sum(axis=1), 1).reshape(n,1)
@@ -66,7 +66,7 @@ class Flock:
 
         acceleration = 1.5 * separation + alignment + cohesion
         #acceleration = 1.5 * separation
-        #acceleration = alignment
+        #acceleration = alignment + cohesion
         #acceleration = cohesion
         self.velocity += acceleration
         self.random_turn()
@@ -83,15 +83,15 @@ class Flock:
         # subtract each element of the position array from the others
         self.dx = np.subtract.outer(self.position[:, 0], self.position[:, 0])
         self.dy = np.subtract.outer(self.position[:, 1], self.position[:, 1])
-        dx = np.absolute(self.dx)
-        dy = np.absolute(self.dy)
-        
+
         # wrap around
-        np.subtract(width+1, dx, out=dx, where=dx > width/2)
-        np.subtract(height+1, dy, out=dy, where=dy > height/2)
+        np.subtract(self.dx, width+1, out=self.dx, where=self.dx > width/2)
+        np.subtract(self.dy, height+1, out=self.dy, where=self.dy > height/2)
+        np.add(width+1, self.dx, out=self.dx, where=-self.dx > width/2)
+        np.add(height+1, self.dy, out=self.dy, where=-self.dy > height/2)
 
         # return hypotenuse of corresponding elements i.e. distance
-        return np.hypot(dx, dy)
+        return np.hypot(self.dx, self.dy)
 
     def calc_alignment(self, mask, count):
         # Compute the average velocity of local neighbours
@@ -145,7 +145,7 @@ class Flock:
         return target
 
     def random_turn(self):
-        angles = np.random.normal(0,self.angle_view*0.1,n)
+        angles = np.random.normal(0,0.1,n)
         c = np.cos(angles)
         s = np.sin(angles)
         self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s

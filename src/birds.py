@@ -67,6 +67,7 @@ class Flock:
         acceleration = 1.5 * separation + alignment + cohesion
         #acceleration = 1.5 * separation
         #acceleration = alignment + cohesion
+        #acceleration = alignment
         #acceleration = cohesion
         self.velocity += acceleration
         self.random_turn()
@@ -108,10 +109,10 @@ class Flock:
 
     def calc_cohesion(self, mask, count):
         # Compute the gravity center of local neighbours
-        center = np.dot(mask, self.position)/count
+        target = np.dot(mask, self.position)/count
         
         # Compute direction toward the center
-        target = center - self.position
+        target -= self.position
         
         # Normalize the result
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)

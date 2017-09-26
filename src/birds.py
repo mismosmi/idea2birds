@@ -9,29 +9,32 @@ from matplotlib.path import Path
 from matplotlib.animation import FuncAnimation
 from matplotlib.collections import PathCollection
 
-width, height, n = 640, 480, 500
+width, height, n = 640, 480, 2
 
 def limit(target, upperbound=False, lowerbound=False):
     norm = np.sqrt((target*target).sum(axis=1)).reshape(n,1)
     if upperbound:
-        target = np.multiply(target, upperbound/norm, out=target, where=norm > upperbound)
+        np.multiply(target, upperbound/norm, out=target, where=norm > upperbound)
     if lowerbound:
-        target = np.multiply(target, lowerbound/norm, out=target, where=norm < lowerbound)
-    return target
+        np.multiply(target, lowerbound/norm, out=target, where=norm < lowerbound)
 
 
 
 class Flock:
     def __init__(self, angle_view=30, max_velocity=1., max_acceleration=0.03):
         angle_view, max_velocity, max_acceleration = float(angle_view), float(max_velocity), float(max_acceleration)
-        angles = np.random.rand(n)*2*np.pi
-        self.velocity = np.ones((n,2),dtype=np.float32)*np.random.rand(n).repeat(2).reshape((n,2))*max_velocity
-        self.velocity[:,0] *= np.cos(angles)
-        self.velocity[:,1] *= np.sin(angles)
-        self.position = np.random.rand(n,2).astype(np.float32)*[width,height]
+        min_velocity = 0.1
+
+        angles = np.random.uniform(0,2*np.pi,n)
+        self.velocity = (np.array([np.cos(angles),np.sin(angles)])*np.random.uniform(min_velocity,max_velocity,n)).T
+        #self.position = np.random.rand(n,2).astype(np.float32)*[width,height]
+        self.position = np.array([[width/2+15,height/2],[width/2-15,height/2]],dtype=np.float32)
+
 
         self.max_velocity = max_velocity
+        self.min_velocity = min_velocity
         self.max_acceleration = max_acceleration
+        self.rad_alignment = 50
         
         print('velocity:')
         print(self.velocity)
@@ -39,11 +42,12 @@ class Flock:
         
 
     def run(self):
-        self.distance = self.calc_distance()
+        self.distance = self.calc_distance() 
+
         
         mask_0 = (self.distance > 0)
         mask_1 = (self.distance < 25)
-        mask_2 = (self.distance < 50)
+        mask_2 = (self.distance < self.rad_alignment)
         mask_1 *= mask_0
         mask_2 *= mask_0
         mask_3 = mask_2
@@ -58,10 +62,11 @@ class Flock:
 
 
         #acceleration = 1.5 * separation + alignment + cohesion
-        acceleration = 1.5 * separation
-        #acceleration = 1.5 * separation + alignment + cohesion
-        #acceleration = 1.5 * separation + alignment + cohesion
-        self.velocity = limit(self.velocity + acceleration, self.max_velocity)
+        #acceleration = 1.5 * separation
+        acceleration = alignment
+        #acceleration = cohesion
+        self.velocity += acceleration
+        limit(self.velocity, self.max_velocity, self.min_velocity)
         self.position += self.velocity
         self.position %= [width, height]
 
@@ -71,8 +76,12 @@ class Flock:
         corresponding to each bird's distance to the others
         """
         # subtract each element of the position array from the others
-        self.dx = np.subtract.outer(self.position[:, 0], self.position[:, 0])
-        self.dy = np.subtract.outer(self.position[:, 1], self.position[:, 1])
+        self.dx = np.subtract.outer(self.position[:, 0], self.position[:, 0]) 
+        self.dy = np.subtract.outer(self.position[:, 1], self.position[:, 1]) 
+        
+        # wrap around
+        np.subtract(width, self.dx, out=self.dx, where=self.dx > width/2)
+        np.subtract(height, self.dy, out=self.dy, where=self.dy > height/2)
 
         # return hypotenuse of corresponding elements i.e. distance
         return np.hypot(self.dx, self.dy)
@@ -91,7 +100,8 @@ class Flock:
         # Compute the resulting steering
         target -= self.velocity
 
-        return limit(target, self.max_acceleration)
+        limit(target, self.max_acceleration)
+        return target
 
 
     def calc_cohesion(self, mask, count):
@@ -111,7 +121,8 @@ class Flock:
         # Compute the resulting steering
         target -= self.velocity
 
-        return limit(target, self.max_acceleration)
+        limit(target, self.max_acceleration)
+        return target
 
 
     def calc_separation(self, mask, count):
@@ -134,7 +145,8 @@ class Flock:
         # Compute the resulting steering
         target -= self.velocity
 
-        return limit(target, self.max_acceleration)
+        limit(target, self.max_acceleration)
+        return target
 
 
 
@@ -197,13 +209,13 @@ if __name__ == '__main__':
     
     argc = len(sys.argv)
     if argc > 4:
-        n = sys.argv[4]
+        n = int(sys.argv[4])
         if argc > 5:
-            width = sys.argv[5]
+            width = int(sys.argv[5])
             if argc > 6:
-                height = sys.argv[6]
+                height = int(sys.argv[6])
     if argc == 1:
-        print('Command Line Arguments: angle_view max_separation max_alignment max_cohesion max_velocity n width height')
+        print('Command Line Arguments: angle_view max_velocity max_acceleration n width height')
 
     flock = Flock(*sys.argv[1:4])
     fig = plt.figure(figsize=(10, 10*height/width), facecolor="white")

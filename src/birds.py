@@ -30,43 +30,46 @@ class Flock:
         angles = np.random.uniform(0,2*np.pi,n)
         self.velocity = (np.array([np.cos(angles),np.sin(angles)])*np.random.uniform(args.min_velocity,args.max_velocity,n)).astype(np.float32).T
         self.position = np.random.rand(n,2).astype(np.float32)*[width,height]
-        #self.position = np.array([[width/2+15,height/2],[width/2-15,height/2]],dtype=np.float32)
+
+        # test boid configuration
+        if n<=3:
+            self.position = np.array([[width/2+15,height/2],[width/2-15,height/2], [width/2,height/2+15]],dtype=np.float32)
+            self.velocity = np.array([[0.5,0],[-0.5,0],[0.5,0]],dtype=np.float32)
+            self.position = self.position[0:n,:]
+            self.velocity = self.velocity[0:n,:]
 
 
-        self.max_velocity = args.max_velocity
-        self.min_velocity = args.min_velocity
-        self.max_acceleration = args.max_acceleration
+        self.args = args
         if args.angle == 0:
             self.angle_view = False
         else:
-            self.angle_view = args.angle/2
-        self.r_alignment = args.alignment_radius
+            # half of viewing angle + deg->rad
+            self.angle_view = args.angle/360*np.pi
         if args.alignment_radius == args.cohesion_radius:
             self.r_cohesion = False
         else:
             self.r_cohesion = args.cohesion_radius
-        self.r_separation = args.separation_radius
+
         
-        self.randomness = args.random
 
 
 
     def run(self):
         self.distance = self.calc_distance() 
 
-        
-        # check if viewing-angle (theta_velocity) += angle_view/2 matches distance-vector to neighbors (theta(pos1-pos2))
         mask_0 = (self.distance > 0)
+        mask_1 = (self.distance < self.args.separation_radius)
+        mask_1 *= mask_0
+        mask_1_count = np.maximum(mask_1.sum(axis=1), 1).reshape(n,1)
+
+        # check if viewing-angle (theta_velocity) +- angle_view/2 matches distance-vector to neighbors (theta(pos1-pos2))
         if self.angle_view:
-            mask_view = np.absolute(np.arctan2(self.dy, self.dx) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view
+            mask_view = np.absolute(np.arctan2(self.dy.T, self.dx.T) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view
             mask_0 *= mask_view
             
-        mask_1 = (self.distance < self.r_separation)
-        mask_2 = (self.distance < self.r_alignment)
-        mask_1 *= mask_0
+        mask_2 = (self.distance < self.args.alignment_radius)
         mask_2 *= mask_0
 
-        mask_1_count = np.maximum(mask_1.sum(axis=1), 1).reshape(n,1)
         mask_2_count = np.maximum(mask_2.sum(axis=1), 1).reshape(n,1)
         if self.r_cohesion:
             mask_3 = (self.distance < self.r_cohesion)
@@ -80,14 +83,11 @@ class Flock:
         cohesion = self.calc_cohesion(mask_3,mask_3_count)
 
 
-        acceleration = 1.5 * separation + alignment + cohesion
-        #acceleration = 1.5 * separation
-        #acceleration = alignment + cohesion
-        #acceleration = alignment
-        #acceleration = cohesion
+        acceleration = self.args.separation * separation + self.args.alignment * alignment + self.args.cohesion * cohesion
         self.velocity += acceleration
-        self.random_turn()
-        limit(self.velocity, self.max_velocity, self.min_velocity)
+        if self.args.random:
+            self.random_turn()
+        limit(self.velocity, self.args.max_velocity, self.args.min_velocity)
         self.position += self.velocity
         self.position %= [width, height]
 
@@ -113,31 +113,31 @@ class Flock:
     def calc_alignment(self, mask, count):
         # Compute the average velocity of local neighbours
         target = np.dot(mask, self.velocity)/count
-
+        
         # Compute steering
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
-        target = self.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
+        target = self.args.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
         target -= self.velocity
 
-        limit(target, self.max_acceleration)
+        limit(target, self.args.max_acceleration)
         return target
 
 
     def calc_cohesion(self, mask, count):
         # Compute the gravity center of local neighbours
         target = np.dot(mask, self.position)/count
-        
+
         # Compute direction toward the center
-        target -= self.position
+        np.subtract(target, self.position, out=target, where=target != [0,0])
         
         # Normalize the result
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
-        target = self.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
+        target = self.args.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
         
         # Compute the resulting steering
         target -= self.velocity
 
-        limit(target, self.max_acceleration)
+        limit(target, self.args.max_acceleration)
         return target
 
 
@@ -153,16 +153,16 @@ class Flock:
         
         # Normalize the result
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
-        target = self.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
+        target = self.args.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
         
         # Compute the resulting steering
         target -= self.velocity
 
-        limit(target, self.max_acceleration)
+        limit(target, self.args.max_acceleration)
         return target
 
     def random_turn(self):
-        angles = np.random.normal(0,self.randomness,n)
+        angles = np.random.normal(0,self.args.random,n)
         c = np.cos(angles)
         s = np.sin(angles)
         self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s
@@ -240,7 +240,10 @@ if __name__ == '__main__':
         "random": 0.1,
         "alignment_radius": 50,
         "cohesion_radius": 50,
-        "separation_radius": 25
+        "separation_radius": 25,
+        "alignment": 1,
+        "cohesion": 1,
+        "separation": 1.5
     }
     parser = argparse.ArgumentParser()
     parser.add_argument("--angle", "-a", help="Boid field of Vision, default="+str(defaults["angle"]), type=float, default=defaults["angle"])
@@ -254,6 +257,9 @@ if __name__ == '__main__':
     parser.add_argument("--alignment_radius", help="Radius for boids considered in alignment, default="+str(defaults["alignment_radius"]), type=int, default=defaults["alignment_radius"])
     parser.add_argument("--cohesion_radius", help="Radius for boids considered in cohesion, default="+str(defaults["cohesion_radius"]), type=int, default=defaults["cohesion_radius"])
     parser.add_argument("--separation_radius", help="Radius for boids considered in separation, default="+str(defaults["separation_radius"]), type=int, default=defaults["separation_radius"])
+    parser.add_argument("--alignment", help="Weight of alignment in acceleration sum, default="+str(defaults["alignment"]), type=float, default=defaults["alignment"])
+    parser.add_argument("--cohesion", help="Weight of cohesion in acceleration sum, default="+str(defaults["cohesion"]), type=float, default=defaults["alignment"])
+    parser.add_argument("--separation", help="Weight of separation in acceleration sum, default="+str(defaults["separation"]), type=float, default=defaults["separation"])
 
     args = parser.parse_args()
 

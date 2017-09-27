@@ -243,7 +243,10 @@ if __name__ == '__main__':
         "separation_radius": 25,
         "alignment": 1,
         "cohesion": 1,
-        "separation": 1.5
+        "separation": 1.5,
+        "frames": 1000,
+        "vfile": "birds.mp4",
+        "fps": 40
     }
     parser = argparse.ArgumentParser()
     parser.add_argument("--angle", "-a", help="Boid field of Vision, default="+str(defaults["angle"]), type=float, default=defaults["angle"])
@@ -260,10 +263,37 @@ if __name__ == '__main__':
     parser.add_argument("--alignment", help="Weight of alignment in acceleration sum, default="+str(defaults["alignment"]), type=float, default=defaults["alignment"])
     parser.add_argument("--cohesion", help="Weight of cohesion in acceleration sum, default="+str(defaults["cohesion"]), type=float, default=defaults["alignment"])
     parser.add_argument("--separation", help="Weight of separation in acceleration sum, default="+str(defaults["separation"]), type=float, default=defaults["separation"])
+    parser.add_argument("--export", "-e", help="Export video file and exit", action="store_true")
+    parser.add_argument("--frames", help="Number of frames for export to video file, default="+str(defaults["frames"]), type=int, default=defaults["frames"])
+    parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults["vfile"]), type=str, default=defaults["vfile"])
+    parser.add_argument("--fps", help="Set Video Framerate for export, default="+str(defaults["fps"]), type=int, default=defaults["fps"])
+    parser.add_argument("--speed", help="Modify speed: Scale max_velocity, min_velocity, max_acceleration, alignment_radius, cohesion_radius, separation_radius at once.", type=float)
+    parser.add_argument("--scale", help="Scale field size.", type=float)
+    parser.add_argument("-s", help="equals --speed S --scale S", type=float)
+
+
+
 
     args = parser.parse_args()
 
-    width, height, n = args.width, args.height, args.n
+    if args.s:
+        args.speed = args.s
+        args.scale = args.s
+
+    if args.speed:
+        args.max_velocity *= args.speed
+        args.min_velocity *= args.speed
+        args.max_acceleration *= args.speed
+        args.alignment_radius *= args.speed
+        args.cohesion_radius *= args.speed
+        args.separation_radius *= args.speed
+
+    if args.scale:
+        width = int(args.scale * args.width)
+        height = int(args.scale * args.height)
+        n = args.n
+    else:
+        width, height, n = args.width, args.height, args.n
     
     flock = Flock(args)
     fig = plt.figure(figsize=(10, 10*height/width), facecolor="white")
@@ -282,9 +312,12 @@ if __name__ == '__main__':
         im = ax.imshow(trace, extent=[0, width, 0, height], vmin=0, vmax=1,
                        interpolation="nearest", cmap=plt.cm.gray_r)
 
-    animation = FuncAnimation(fig, update, interval=10, frames=1000)
-    #animation.save('boid.mp4', fps=40, dpi=80, bitrate=-1, codec="libx264",
-    #               extra_args=['-pix_fmt', 'yuv420p'],
-    #               metadata={'artist': 'Nicolas P. Rougier'})
-    plt.show()
+        
+    animation = FuncAnimation(fig, update, interval=10, frames=args.frames)
+    if args.export:
+        animation.save(args.vfile, fps=args.fps, dpi=80, bitrate=-1, codec="libx264",
+                   extra_args=['-pix_fmt', 'yuv420p'],
+                   metadata={'artist': 'Nicolas P. Rougier'})
+    else:
+        plt.show()
 

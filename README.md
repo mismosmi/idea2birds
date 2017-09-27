@@ -3,7 +3,7 @@ Simulation of the collective motion of a flock of birds for the course idea to r
 
 ## Usage:
 ```
-usage: python3 birds.py [-h] [--angle ANGLE] [--max_velocity MAX_VELOCITY]
+usage: [python3] birds.py [-h] [--angle ANGLE] [--max_velocity MAX_VELOCITY]
                 [--min_velocity MIN_VELOCITY]
                 [--max_acceleration MAX_ACCELERATION] [--width WIDTH]
                 [--height HEIGHT] [--n N] [--random RANDOM]
@@ -11,7 +11,9 @@ usage: python3 birds.py [-h] [--angle ANGLE] [--max_velocity MAX_VELOCITY]
                 [--cohesion_radius COHESION_RADIUS]
                 [--separation_radius SEPARATION_RADIUS]
                 [--alignment ALIGNMENT] [--cohesion COHESION]
-                [--separation SEPARATION]
+                [--separation SEPARATION] [--export] [--frames FRAMES]
+                [--vfile VFILE] [--fps FPS] [--speed SPEED] [--scale SCALE]
+                [-s S]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -40,4 +42,14 @@ optional arguments:
   --cohesion COHESION   Weight of cohesion in acceleration sum, default=1
   --separation SEPARATION
                         Weight of separation in acceleration sum, default=1.5
+  --export, -e          Export video file and exit
+  --frames FRAMES       Number of frames for export to video file,
+                        default=1000
+  --vfile VFILE         Out-File for video export, default=birds.mp4
+  --fps FPS             Set Video Framerate for export, default=40
+  --speed SPEED         Modify speed: Scale max_velocity, min_velocity,
+                        max_acceleration, alignment_radius, cohesion_radius,
+                        separation_radius at once.
+  --scale SCALE         Scale field size.
+  -s S                  equals --speed S --scale S
 ```

@@ -2,7 +2,7 @@
 Simulation of the collective motion of a flock of birds for the course idea to result at university of copenhagen in winter semester 2017/2018
 
 ## Usage:
-
+```
 usage: python3 birds.py [-h] [--angle ANGLE] [--max_velocity MAX_VELOCITY]
                 [--min_velocity MIN_VELOCITY]
                 [--max_acceleration MAX_ACCELERATION] [--width WIDTH]
@@ -40,3 +40,4 @@ optional arguments:
   --cohesion COHESION   Weight of cohesion in acceleration sum, default=1
   --separation SEPARATION
                         Weight of separation in acceleration sum, default=1.5
+```

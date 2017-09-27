@@ -9,8 +9,9 @@ from matplotlib.path import Path
 from matplotlib.animation import FuncAnimation
 from matplotlib.collections import PathCollection
 import time
+import argparse
 
-width, height, n = 640, 480, 500
+width, height, n = 640,480,500
 
 def limit(target, upperbound=False, lowerbound=False):
 # Multiplies Vector by a factor so that lowerbound < |v| < upperbound
@@ -23,23 +24,31 @@ def limit(target, upperbound=False, lowerbound=False):
 
 
 class Flock:
-    def __init__(self, angle_view=30, max_velocity=1., max_acceleration=0.03):
-        # typecast for command line argument input + angle deg->rad
-        angle_view, max_velocity, max_acceleration = float(angle_view)/180*np.pi, float(max_velocity), float(max_acceleration)
-        # minimum velocity, basically only matters for birds that lose their flocks.
-        min_velocity = 0.5
+    def __init__(self, args):
 
         # randomly distributed starting velocities, might come out pretty much the same as if you just set self.velocity = np.zeros((n,2),dtype=np.float32) but avoids division by zero.
         angles = np.random.uniform(0,2*np.pi,n)
-        self.velocity = (np.array([np.cos(angles),np.sin(angles)])*np.random.uniform(min_velocity,max_velocity,n)).astype(np.float32).T
+        self.velocity = (np.array([np.cos(angles),np.sin(angles)])*np.random.uniform(args.min_velocity,args.max_velocity,n)).astype(np.float32).T
         self.position = np.random.rand(n,2).astype(np.float32)*[width,height]
         #self.position = np.array([[width/2+15,height/2],[width/2-15,height/2]],dtype=np.float32)
 
 
-        self.max_velocity = max_velocity
-        self.min_velocity = min_velocity
-        self.max_acceleration = max_acceleration
-        self.angle_view = angle_view
+        self.max_velocity = args.max_velocity
+        self.min_velocity = args.min_velocity
+        self.max_acceleration = args.max_acceleration
+        if args.angle == 0:
+            self.angle_view = False
+        else:
+            self.angle_view = args.angle/2
+        self.r_alignment = args.alignment_radius
+        if args.alignment_radius == args.cohesion_radius:
+            self.r_cohesion = False
+        else:
+            self.r_cohesion = args.cohesion_radius
+        self.r_separation = args.separation_radius
+        
+        self.randomness = args.random
+
 
 
     def run(self):
@@ -47,17 +56,24 @@ class Flock:
 
         
         # check if viewing-angle (theta_velocity) += angle_view/2 matches distance-vector to neighbors (theta(pos1-pos2))
-        mask_view = np.absolute(np.arctan2(self.dy, self.dx) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view/2
         mask_0 = (self.distance > 0)
-        mask_1 = (self.distance < 25)
-        mask_2 = (self.distance < 50)
-        mask_1 *= mask_0*mask_view
-        mask_2 *= mask_0*mask_view
-        mask_3 = mask_2
+        if self.angle_view:
+            mask_view = np.absolute(np.arctan2(self.dy, self.dx) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view
+            mask_0 *= mask_view
+            
+        mask_1 = (self.distance < self.r_separation)
+        mask_2 = (self.distance < self.r_alignment)
+        mask_1 *= mask_0
+        mask_2 *= mask_0
 
         mask_1_count = np.maximum(mask_1.sum(axis=1), 1).reshape(n,1)
         mask_2_count = np.maximum(mask_2.sum(axis=1), 1).reshape(n,1)
-        mask_3_count = mask_2_count
+        if self.r_cohesion:
+            mask_3 = (self.distance < self.r_cohesion)
+            mask_3_count = np.maximum(mask_3.sum(axis=1), 1).reshape(n,1)
+        else:
+            mask_3 = mask_2
+            mask_3_count = mask_2_count
 
         separation = self.calc_separation(mask_1,mask_1_count)
         alignment = self.calc_alignment(mask_2,mask_2_count)
@@ -146,7 +162,7 @@ class Flock:
         return target
 
     def random_turn(self):
-        angles = np.random.normal(0,0.1,n)
+        angles = np.random.normal(0,self.randomness,n)
         c = np.cos(angles)
         s = np.sin(angles)
         self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s
@@ -212,18 +228,38 @@ def update(*args):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
-    
-    argc = len(sys.argv)
-    if argc > 4:
-        n = int(sys.argv[4])
-        if argc > 5:
-            width = int(sys.argv[5])
-            if argc > 6:
-                height = int(sys.argv[6])
-    if argc == 1:
-        print('Command Line Arguments: angle_view max_velocity max_acceleration n width height')
 
-    flock = Flock(*sys.argv[1:4])
+    defaults = {
+        "angle": 60.,
+        "max_velocity": 1.,
+        "min_velocity": 0.5,
+        "max_acceleration": 0.03,
+        "width": 640,
+        "height": 480,
+        "n": 500,
+        "random": 0.1,
+        "alignment_radius": 50,
+        "cohesion_radius": 50,
+        "separation_radius": 25
+    }
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--angle", "-a", help="Boid field of Vision, default="+str(defaults["angle"]), type=float, default=defaults["angle"])
+    parser.add_argument("--max_velocity", help="Maximum velocity for a boid, default="+str(defaults["max_velocity"]), type=float, default=defaults["max_velocity"])
+    parser.add_argument("--min_velocity", help="Minimum velocity for a boid, default="+str(defaults["min_velocity"]), type=float, default=defaults["min_velocity"])
+    parser.add_argument("--max_acceleration", help="Maximum acceleration per effect", type=float, default=defaults["max_acceleration"])
+    parser.add_argument("--width", help="Range for x-coordinate, default="+str(defaults["width"]), type=int, default=defaults["width"])
+    parser.add_argument("--height", help="Range for y-coordinate, default="+str(defaults["height"]),type=int, default=defaults["height"])
+    parser.add_argument("--n", "-n", help="Number of boids, default="+str(defaults["n"]),type=int, default=defaults["n"])
+    parser.add_argument("--random", "-r", help="Scale factor of normal distribution of random turning angles, default="+str(defaults["random"]), type=float, default=defaults["random"])
+    parser.add_argument("--alignment_radius", help="Radius for boids considered in alignment, default="+str(defaults["alignment_radius"]), type=int, default=defaults["alignment_radius"])
+    parser.add_argument("--cohesion_radius", help="Radius for boids considered in cohesion, default="+str(defaults["cohesion_radius"]), type=int, default=defaults["cohesion_radius"])
+    parser.add_argument("--separation_radius", help="Radius for boids considered in separation, default="+str(defaults["separation_radius"]), type=int, default=defaults["separation_radius"])
+
+    args = parser.parse_args()
+
+    width, height, n = args.width, args.height, args.n
+    
+    flock = Flock(args)
     fig = plt.figure(figsize=(10, 10*height/width), facecolor="white")
     ax = fig.add_axes([0.0, 0.0, 1.0, 1.0], aspect=1, frameon=False)
     collection = MarkerCollection(n)

@@ -15,6 +15,7 @@ class Flock:
         self.r = 10  # Radius of influence
         self.max_velocity = 1.0
         self.mu = .1  # noice
+        self.cone_angle = -1
 
         self.position[:, 0] = np.random.uniform(0, width, n)
         self.position[:, 1] = np.random.uniform(0, height, n)
@@ -25,6 +26,9 @@ class Flock:
     def run(self):
         self.velocity = self.calc_velocities()
         self.position += self.velocity
+
+        v_a = 1./( len(self.angles) * self.max_velocity) * np.sqrt(np.sum(self.velocity[:, 0])**2 + np.sum(self.velocity[:, 1])**2)
+        print(v_a)
 
         # Wrap around
         self.position += [width, height]
@@ -42,6 +46,18 @@ class Flock:
         # return hypotenuse of corresponding elements i.e. distance
         return np.hypot(dx, dy)
 
+
+    def within_cone(self):
+        dx = np.subtract.outer(self.position[:,0], self.position[:,0])
+        dy = np.subtract.outer(self.position[:,1], self.position[:,1])
+        dist = np.hypot(dx, dy)
+
+        cone_cos = np.divide( dx * np.cos(self.angles) + dy * np.sin(self.angles), dist, np.ones_like(dist), where=dist!=0)
+
+        # cone_cos = np.divide(dx, dist, np.ones_like(dx), where=dist!=0)
+        return ( cone_cos > self.cone_angle )
+
+
     def calc_velocities(self):
         """
         Calculate updated velocities. New angles are calculated as
@@ -54,7 +70,8 @@ class Flock:
         # Result is an array containing True or False
         mask_zero = (0 <= distance)  # Only look at positive distances
         mask_radius = (distance < self.r)  # Only fetch birds within radius r
-        mask = mask_zero * mask_radius
+        # mask = mask_zero * mask_radius
+        mask = self.within_cone() * mask_radius  # Birds within cone and radius
         count = mask.sum(axis=1)
 
         # Get average values of direction
@@ -74,9 +91,6 @@ class Flock:
         velocities[:, 1] = np.sin(angles_avg)
 
         return velocities * self.max_velocity
-        
-
-        
 
     def calc_alignment(self):
         pass

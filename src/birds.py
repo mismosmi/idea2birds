@@ -50,6 +50,8 @@ class Flock:
         else:
             self.r_cohesion = args.cohesion_radius
 
+        self.angle_alignment, self.angle_cohesion, self.angle_separation = "alignment" in args.limit_view, "cohesion" in args.limit_view, "separation" in args.limit_view
+
         
 
 
@@ -102,8 +104,8 @@ class Flock:
         self.dy = np.subtract.outer(self.position[:, 1], self.position[:, 1])
 
         # wrap around
-        np.subtract(self.dx, width+1, out=self.dx, where=self.dx > width/2)
-        np.subtract(self.dy, height+1, out=self.dy, where=self.dy > height/2)
+        np.subtract(self.dx, np.sign(self.dx)*width, out=self.dx, where=np.absolute(self.dx) > width/2)
+        np.subtract(self.dy, np.sign(self.dy)*height, out=self.dy, where=np.absolute(self.dy) > height/2)
         np.add(width+1, self.dx, out=self.dx, where=-self.dx > width/2)
         np.add(height+1, self.dy, out=self.dy, where=-self.dy > height/2)
 
@@ -129,6 +131,10 @@ class Flock:
 
         # Compute direction toward the center
         np.subtract(target, self.position, out=target, where=target != [0,0])
+
+        # Wrap around
+        np.subtract(target[:,0], np.sign(target[:,0])*width, out=target[:,0], where=np.absolute(target[:,0]) > width/2)
+        np.subtract(target[:,1], np.sign(target[:,1])*height, out=target[:,1], where=np.absolute(target[:,1]) > height/2)
         
         # Normalize the result
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
@@ -218,6 +224,7 @@ def update(*args):
                                                flock.velocity[:, 0])
     collection.update()
 
+
     # Trace updating
     if trace is not None:
         P = flock.position.astype(int)
@@ -246,10 +253,11 @@ if __name__ == '__main__':
         "separation": 1.5,
         "frames": 1000,
         "vfile": "birds.mp4",
-        "fps": 40
+        "fps": 40,
+        "limit_view": "alignment,cohesion"
     }
     parser = argparse.ArgumentParser()
-    parser.add_argument("--angle", "-a", help="Boid field of Vision, default="+str(defaults["angle"]), type=float, default=defaults["angle"])
+    parser.add_argument("--angle", "-a", help="Boid field of Vision [deg], default="+str(defaults["angle"]), type=float, default=defaults["angle"])
     parser.add_argument("--max_velocity", help="Maximum velocity for a boid, default="+str(defaults["max_velocity"]), type=float, default=defaults["max_velocity"])
     parser.add_argument("--min_velocity", help="Minimum velocity for a boid, default="+str(defaults["min_velocity"]), type=float, default=defaults["min_velocity"])
     parser.add_argument("--max_acceleration", help="Maximum acceleration per effect", type=float, default=defaults["max_acceleration"])
@@ -263,6 +271,7 @@ if __name__ == '__main__':
     parser.add_argument("--alignment", help="Weight of alignment in acceleration sum, default="+str(defaults["alignment"]), type=float, default=defaults["alignment"])
     parser.add_argument("--cohesion", help="Weight of cohesion in acceleration sum, default="+str(defaults["cohesion"]), type=float, default=defaults["alignment"])
     parser.add_argument("--separation", help="Weight of separation in acceleration sum, default="+str(defaults["separation"]), type=float, default=defaults["separation"])
+    parser.add_argument("--limit_view", help="Which effects are affected by viewing angle limitation, default="+defaults["limit_view"], type=str, default=defaults["limit_view"])
     parser.add_argument("--export", "-e", help="Export video file and exit", action="store_true")
     parser.add_argument("--frames", help="Number of frames for export to video file, default="+str(defaults["frames"]), type=int, default=defaults["frames"])
     parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults["vfile"]), type=str, default=defaults["vfile"])
@@ -294,6 +303,7 @@ if __name__ == '__main__':
         n = args.n
     else:
         width, height, n = args.width, args.height, args.n
+
     
     flock = Flock(args)
     fig = plt.figure(figsize=(10, 10*height/width), facecolor="white")

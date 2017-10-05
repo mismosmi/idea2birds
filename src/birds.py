@@ -7,20 +7,30 @@ import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from matplotlib.animation import FuncAnimation
 from matplotlib.collections import PathCollection
+import argparse
 
 class Flock:
-    def __init__(self, n=500, width=640, height=480):
+    def __init__(self, args):
+        n = args.n
         self.velocity = np.zeros((n,2),dtype=np.float32)
         self.position = np.zeros((n,2),dtype=np.float32)
         self.r = 10  # Radius of influence
         self.max_velocity = 1.0
-        self.mu = .1  # noice
+        self.mu = args.mu 
 
         self.position[:, 0] = np.random.uniform(0, width, n)
         self.position[:, 1] = np.random.uniform(0, height, n)
         self.angles = np.random.uniform(0, 2*np.pi, n)
         self.velocity[:, 0] = np.cos(self.angles) * self.max_velocity
         self.velocity[:, 1] = np.sin(self.angles) * self.max_velocity
+        
+        # test boid configuration
+        if n<=3:
+            self.position = np.array([[width/2+15,height/2],[width/2-15,height/2], [width/2,height/2+15]],dtype=np.float32)
+            self.velocity = np.array([[0.5,0],[-0.5,0],[0.5,0]],dtype=np.float32)
+            self.position = self.position[0:n,:]
+            self.velocity = self.velocity[0:n,:]
+
 
     def run(self):
         self.velocity = self.calc_velocities()
@@ -64,7 +74,8 @@ class Flock:
         # Compute new angles
         angles_avg = np.arctan2(sin_avg, cos_avg)
         #angles_avg += np.pi*(cos_avg < 0)
-        angles_avg += np.random.uniform(-self.mu, self.mu, len(angles_avg))
+        if self.mu:
+            angles_avg += np.random.uniform(-self.mu, self.mu, len(angles_avg))
 
         self.angles = angles_avg
 
@@ -76,50 +87,8 @@ class Flock:
         return velocities * self.max_velocity
         
 
-        
 
-    def calc_alignment(self):
-        pass
-
-    def calc_cohesion(self, mask, count):
-        # Compute the gravity center of local neighbours
-        center = np.dot(mask, self.position)/count.reshape(n, 1)
         
-        # Compute direction toward the center
-        target = center - self.position
-        
-        # Normalize the result
-        norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
-        target *= np.divide(target, norm, out=target, where=norm != 0)
-        
-        # Cohesion at constant speed (max_velocity)
-        target *= max_velocity
-        
-        # Compute the resulting steering
-        self.cohesion = target - velocity
-
-    def calc_separation(self):
-        # Compute the repulsion force from local neighbours
-        repulsion = np.dstack((self.dx, self.dy))
-        
-        # Force is inversely proportional to the distance
-        repulsion = np.divide(repulsion, distance.reshape(self.n, self.n, 1)**2, out=repulsion,
-                              where=distance.reshape(self.n, self.n, 1) != 0)
-        
-        # Compute direction away from others
-        target = (repulsion*mask.reshape(self.n, self.n, 1)).sum(axis=1)/count.reshape(self.n, 1)
-        
-        # Normalize the result
-        norm = np.sqrt((target*target).sum(axis=1)).reshape(self.n, 1)
-        target *= np.divide(target, norm, out=target, where=norm != 0)
-        
-        # Separation at constant speed (max_velocity)
-        target *= max_velocity
-        
-        # Compute the resulting steering
-        self.separation = target - self.velocity
-
-
 class MarkerCollection:
     """
     Marker collection
@@ -177,9 +146,19 @@ def update(*args):
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    n = 300
+    defaults = {
+        "n": 300,
+        "mu": .1
+    }
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mu",help="Maximum angle for uniform distribution of random turns,default="+str(defaults["mu"]),type=float, default=defaults["mu"])
+    parser.add_argument("--n","-n",help="Number of birds, default="+str(defaults["n"]),type=int, default=defaults["n"])
+
+    args = parser.parse_args()
+
+    n = args.n    
     width, height = 640, 360
-    flock = Flock(n)
+    flock = Flock(args)
     fig = plt.figure(figsize=(10, 10*height/width), facecolor="white")
     ax = fig.add_axes([0.0, 0.0, 1.0, 1.0], aspect=1, frameon=False)
     collection = MarkerCollection(n)

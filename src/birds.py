@@ -176,8 +176,8 @@ class Flock:
         return target
 
     def random_turn(self):
-        if self.args.mu:
-            angles = np.random.uniform(-self.args.mu,self.args.mu,n)
+        if self.args.eta:
+            angles = np.random.uniform(-self.args.eta/2,self.args.eta/2,n)
         else:
             angles = np.random.normal(0,self.args.random,n)
         c = np.cos(angles)
@@ -225,7 +225,13 @@ class MarkerCollection:
 
 
 def update(*args):
-    global flock, collection, trace
+    global flock, collection, trace, param_record
+
+    # record parameters
+    if param_record:
+        param_record["va"][args[0]] = flock.get_va()
+            
+
     # Flock updating
     flock.run()
 
@@ -245,58 +251,59 @@ def update(*args):
         im.set_array(trace)
 
     
-
+defaults = argparse.Namespace()
+defaults.angle = 60.
+defaults.max_velocity = 1.
+defaults.min_velocity = 0.5
+defaults.v = None
+defaults.max_acceleration = 0.03
+defaults.width = 640
+defaults.height = 480
+defaults.n = 500
+defaults.random = 0.1
+defaults.alignment_radius = 50
+defaults.cohesion_radius = 50
+defaults.separation_radius = 25
+defaults.alignment = 1
+defaults.cohesion = 1
+defaults.separation = 1.5
+defaults.frames = 1000
+defaults.vfile = "birds.mp4"
+defaults.fps = 40
+defaults.limit_view = "alignment,cohesion"
+defaults.eta = 0
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    defaults = {
-        "angle": 60.,
-        "max_velocity": 1.,
-        "min_velocity": 0.5,
-        "max_acceleration": 0.03,
-        "width": 640,
-        "height": 480,
-        "n": 500,
-        "random": 0.1,
-        "alignment_radius": 50,
-        "cohesion_radius": 50,
-        "separation_radius": 25,
-        "alignment": 1,
-        "cohesion": 1,
-        "separation": 1.5,
-        "frames": 1000,
-        "vfile": "birds.mp4",
-        "fps": 40,
-        "limit_view": "alignment,cohesion",
-        "mu": 0
-    }
+    
     parser = argparse.ArgumentParser()
-    parser.add_argument("--angle", "-a", help="Boid field of Vision [deg], default="+str(defaults["angle"]), type=float, default=defaults["angle"])
-    parser.add_argument("--max_velocity", help="Maximum velocity for a boid, default="+str(defaults["max_velocity"]), type=float, default=defaults["max_velocity"])
-    parser.add_argument("--min_velocity", help="Minimum velocity for a boid, default="+str(defaults["min_velocity"]), type=float, default=defaults["min_velocity"])
+    parser.add_argument("--angle", "-a", help="Boid field of Vision [deg], default="+str(defaults.angle), type=float, default=defaults.angle)
+    parser.add_argument("--max_velocity", help="Maximum velocity for a boid, default="+str(defaults.max_velocity), type=float, default=defaults.max_velocity)
+    parser.add_argument("--min_velocity", help="Minimum velocity for a boid, default="+str(defaults.min_velocity), type=float, default=defaults.min_velocity)
     parser.add_argument("-v", help="Velocity parameter: Short for --max_velocity VELOCITY --min_velocity VELOCITY", type=float)
-    parser.add_argument("--max_acceleration", help="Maximum acceleration per effect", type=float, default=defaults["max_acceleration"])
-    parser.add_argument("--width", help="Range for x-coordinate, default="+str(defaults["width"]), type=int, default=defaults["width"])
-    parser.add_argument("--height", help="Range for y-coordinate, default="+str(defaults["height"]),type=int, default=defaults["height"])
-    parser.add_argument("--n", "-n", help="Number of boids, default="+str(defaults["n"]),type=int, default=defaults["n"])
-    parser.add_argument("--random", "-r", help="Scale factor of normal distribution of random turning angles, default="+str(defaults["random"]), type=float, default=defaults["random"])
-    parser.add_argument("--mu", help="Set for uniformly distributed angles instead of normal distribution, generates Angles -mu < delta Theta < mu", type=float, default=defaults["mu"])
-    parser.add_argument("--alignment_radius", help="Radius for boids considered in alignment, default="+str(defaults["alignment_radius"]), type=int, default=defaults["alignment_radius"])
-    parser.add_argument("--cohesion_radius", help="Radius for boids considered in cohesion, default="+str(defaults["cohesion_radius"]), type=int, default=defaults["cohesion_radius"])
-    parser.add_argument("--separation_radius", help="Radius for boids considered in separation, default="+str(defaults["separation_radius"]), type=int, default=defaults["separation_radius"])
-    parser.add_argument("--alignment", help="Weight of alignment in acceleration sum, default="+str(defaults["alignment"]), type=float, default=defaults["alignment"])
-    parser.add_argument("--cohesion", help="Weight of cohesion in acceleration sum, default="+str(defaults["cohesion"]), type=float, default=defaults["alignment"])
-    parser.add_argument("--separation", help="Weight of separation in acceleration sum, default="+str(defaults["separation"]), type=float, default=defaults["separation"])
-    parser.add_argument("--limit_view", help="Which effects are affected by viewing angle limitation, default="+defaults["limit_view"], type=str, default=defaults["limit_view"])
+    parser.add_argument("--max_acceleration", help="Maximum acceleration per effect", type=float, default=defaults.max_acceleration)
+    parser.add_argument("--width", help="Range for x-coordinate, default="+str(defaults.width), type=int, default=defaults.width)
+    parser.add_argument("--height", help="Range for y-coordinate, default="+str(defaults.height),type=int, default=defaults.height)
+    parser.add_argument("--n", "-n", help="Number of boids, default="+str(defaults.n),type=int, default=defaults.n)
+    parser.add_argument("--random", "-r", help="Scale factor of normal distribution of random turning angles, default="+str(defaults.random), type=float, default=defaults.random)
+    parser.add_argument("--eta", help="Set for uniformly distributed angles instead of normal distribution, generates Angles -eta/2 < delta Theta < eta/2", type=float, default=defaults.eta)
+    parser.add_argument("--alignment_radius", help="Radius for boids considered in alignment, default="+str(defaults.alignment_radius), type=int, default=defaults.alignment_radius)
+    parser.add_argument("--cohesion_radius", help="Radius for boids considered in cohesion, default="+str(defaults.cohesion_radius), type=int, default=defaults.cohesion_radius)
+    parser.add_argument("--separation_radius", help="Radius for boids considered in separation, default="+str(defaults.separation_radius), type=int, default=defaults.separation_radius)
+    parser.add_argument("--alignment", help="Weight of alignment in acceleration sum, default="+str(defaults.alignment), type=float, default=defaults.alignment)
+    parser.add_argument("--cohesion", help="Weight of cohesion in acceleration sum, default="+str(defaults.cohesion), type=float, default=defaults.alignment)
+    parser.add_argument("--separation", help="Weight of separation in acceleration sum, default="+str(defaults.separation), type=float, default=defaults.separation)
+    parser.add_argument("--limit_view", help="Which effects are affected by viewing angle limitation, default="+defaults.limit_view, type=str, default=defaults.limit_view)
     parser.add_argument("--export", "-e", help="Export video file and exit", action="store_true")
-    parser.add_argument("--frames", help="Number of frames for export to video or parameter record file, default="+str(defaults["frames"]), type=int, default=defaults["frames"])
-    parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults["vfile"]), type=str, default=defaults["vfile"])
-    parser.add_argument("--fps", help="Set Video Framerate for export, default="+str(defaults["fps"]), type=int, default=defaults["fps"])
+    parser.add_argument("--frames", help="Number of frames for export to video or parameter record file, default="+str(defaults.frames), type=int, default=defaults.frames)
+    parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults.vfile), type=str, default=defaults.vfile)
+    parser.add_argument("--fps", help="Set Video Framerate for export, default="+str(defaults.fps), type=int, default=defaults.fps)
     parser.add_argument("--speed", help="Modify speed: Scale max_velocity, min_velocity, max_acceleration, alignment_radius, cohesion_radius, separation_radius at once.", type=float)
     parser.add_argument("--scale", help="Scale field size.", type=float)
     parser.add_argument("-s", help="equals --speed S --scale S", type=float)
-    parser.add_argument("--out", "-o", help="Specify output File for recording Parameters, output File and exit, Filetype: npz", type=str)
+    parser.add_argument("--out", "-o", help="Specify output File for recording Parameters, Filetype: .npz", type=str)
+    parser.add_argument("--batch", "-b", help="Batch mode: no live display, no video export", action="store_true")
 
 
 
@@ -352,24 +359,42 @@ if __name__ == '__main__':
                        interpolation="nearest", cmap=plt.cm.gray_r)
 
         
-    animation = FuncAnimation(fig, update, interval=10, frames=args.frames)
-    if args.export:
-        animation.save(args.vfile, fps=args.fps, dpi=80, bitrate=-1, codec="libx264",
-                   extra_args=['-pix_fmt', 'yuv420p'],
-                   metadata={'artist': 'Nicolas P. Rougier'})
 
-    elif args.out:
-        # initialize storage dict
-        va = np.zeros(args.frames)
+    if args.out:
+        # initialize storage arrays
+        param_record = {
+            "frames": args.frames,
+            "va": np.zeros(args.frames),
+            "eta": args.eta,
+            "rho": n/(width*height),
+            "v": args.v if args.v else [args.min_velocity,args.max_velocity]
+            }
 
         # run loop
-        if not args.export:
+        if args.batch:
             for i in range(0,args.frames):
                 va[i] = flock.get_va()
                 flock.run()
-
-        # save to file
-        np.savez(args.out, va=va)
     else:
-        plt.show()
+        param_record = False
+        
+
+
+
+    if not args.batch:
+        if args.export:
+            animation = FuncAnimation(fig, update, interval=10, frames=args.frames)
+            animation.save(args.vfile, fps=args.fps, dpi=80, bitrate=-1, codec="libx264",
+                       extra_args=['-pix_fmt', 'yuv420p'],
+                       metadata={'artist': 'Nicolas P. Rougier'})
+
+        else:
+            animation = FuncAnimation(fig, update, interval=10, frames=args.frames, repeat=not args.out)
+            plt.show()
+
+    if args.out:
+        # save to file
+        np.savez(args.out, **param_record)
+
+
 

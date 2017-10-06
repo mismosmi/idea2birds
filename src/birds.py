@@ -38,6 +38,8 @@ class Flock:
             self.position = self.position[0:n,:]
             self.velocity = self.velocity[0:n,:]
 
+        if not args.v and args.max_velocity == args.min_velocity:
+            args.v = args.max_velocity
 
         self.args = args
         if args.angle == 0:
@@ -53,8 +55,14 @@ class Flock:
         self.angle_alignment, self.angle_cohesion, self.angle_separation = "alignment" in args.limit_view, "cohesion" in args.limit_view, "separation" in args.limit_view
 
         
-
-
+    def get_va(self):
+        if self.args.v:
+            vges = np.sum(self.velocity,axis=0)
+            return 1/(n*self.args.v) * np.sqrt((vges*vges).sum())
+        else:
+            vges = np.sum(self.velocity,axis=0)
+            nges = np.sum(np.sqrt((self.velocity*self.velocity).sum(axis=1)))
+            return (vges*vges).sum()/nges
 
     def run(self):
         self.distance = self.calc_distance() 
@@ -168,7 +176,10 @@ class Flock:
         return target
 
     def random_turn(self):
-        angles = np.random.normal(0,self.args.random,n)
+        if self.args.mu:
+            angles = np.random.uniform(-self.args.mu,self.args.mu,n)
+        else:
+            angles = np.random.normal(0,self.args.random,n)
         c = np.cos(angles)
         s = np.sin(angles)
         self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s
@@ -215,14 +226,15 @@ class MarkerCollection:
 
 def update(*args):
     global flock, collection, trace
-
     # Flock updating
     flock.run()
+
     collection._scale = 10
     collection._translate = flock.position
     collection._rotate = -np.pi/2 + np.arctan2(flock.velocity[:, 1],
                                                flock.velocity[:, 0])
     collection.update()
+
 
 
     # Trace updating
@@ -231,6 +243,8 @@ def update(*args):
         trace[height-1-P[:, 1], P[:, 0]] = .75
         trace *= .99
         im.set_array(trace)
+
+    
 
 
 # -----------------------------------------------------------------------------
@@ -254,17 +268,20 @@ if __name__ == '__main__':
         "frames": 1000,
         "vfile": "birds.mp4",
         "fps": 40,
-        "limit_view": "alignment,cohesion"
+        "limit_view": "alignment,cohesion",
+        "mu": 0
     }
     parser = argparse.ArgumentParser()
     parser.add_argument("--angle", "-a", help="Boid field of Vision [deg], default="+str(defaults["angle"]), type=float, default=defaults["angle"])
     parser.add_argument("--max_velocity", help="Maximum velocity for a boid, default="+str(defaults["max_velocity"]), type=float, default=defaults["max_velocity"])
     parser.add_argument("--min_velocity", help="Minimum velocity for a boid, default="+str(defaults["min_velocity"]), type=float, default=defaults["min_velocity"])
+    parser.add_argument("-v", help="Velocity parameter: Short for --max_velocity VELOCITY --min_velocity VELOCITY", type=float)
     parser.add_argument("--max_acceleration", help="Maximum acceleration per effect", type=float, default=defaults["max_acceleration"])
     parser.add_argument("--width", help="Range for x-coordinate, default="+str(defaults["width"]), type=int, default=defaults["width"])
     parser.add_argument("--height", help="Range for y-coordinate, default="+str(defaults["height"]),type=int, default=defaults["height"])
     parser.add_argument("--n", "-n", help="Number of boids, default="+str(defaults["n"]),type=int, default=defaults["n"])
     parser.add_argument("--random", "-r", help="Scale factor of normal distribution of random turning angles, default="+str(defaults["random"]), type=float, default=defaults["random"])
+    parser.add_argument("--mu", help="Set for uniformly distributed angles instead of normal distribution, generates Angles -mu < delta Theta < mu", type=float, default=defaults["mu"])
     parser.add_argument("--alignment_radius", help="Radius for boids considered in alignment, default="+str(defaults["alignment_radius"]), type=int, default=defaults["alignment_radius"])
     parser.add_argument("--cohesion_radius", help="Radius for boids considered in cohesion, default="+str(defaults["cohesion_radius"]), type=int, default=defaults["cohesion_radius"])
     parser.add_argument("--separation_radius", help="Radius for boids considered in separation, default="+str(defaults["separation_radius"]), type=int, default=defaults["separation_radius"])
@@ -273,17 +290,22 @@ if __name__ == '__main__':
     parser.add_argument("--separation", help="Weight of separation in acceleration sum, default="+str(defaults["separation"]), type=float, default=defaults["separation"])
     parser.add_argument("--limit_view", help="Which effects are affected by viewing angle limitation, default="+defaults["limit_view"], type=str, default=defaults["limit_view"])
     parser.add_argument("--export", "-e", help="Export video file and exit", action="store_true")
-    parser.add_argument("--frames", help="Number of frames for export to video file, default="+str(defaults["frames"]), type=int, default=defaults["frames"])
+    parser.add_argument("--frames", help="Number of frames for export to video or parameter record file, default="+str(defaults["frames"]), type=int, default=defaults["frames"])
     parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults["vfile"]), type=str, default=defaults["vfile"])
     parser.add_argument("--fps", help="Set Video Framerate for export, default="+str(defaults["fps"]), type=int, default=defaults["fps"])
     parser.add_argument("--speed", help="Modify speed: Scale max_velocity, min_velocity, max_acceleration, alignment_radius, cohesion_radius, separation_radius at once.", type=float)
     parser.add_argument("--scale", help="Scale field size.", type=float)
     parser.add_argument("-s", help="equals --speed S --scale S", type=float)
+    parser.add_argument("--out", "-o", help="Specify output File for recording Parameters, output File and exit, Filetype: npz", type=str)
 
 
 
 
     args = parser.parse_args()
+
+    if args.v:
+        args.max_velocity = args.v
+        args.min_velocity = args.v
 
     if args.s:
         args.speed = args.s
@@ -315,6 +337,13 @@ if __name__ == '__main__':
     ax.set_xticks([])
     ax.set_yticks([])
 
+        
+            
+            
+    
+    
+
+
     # Trace
     trace = None
     if 0:
@@ -328,6 +357,19 @@ if __name__ == '__main__':
         animation.save(args.vfile, fps=args.fps, dpi=80, bitrate=-1, codec="libx264",
                    extra_args=['-pix_fmt', 'yuv420p'],
                    metadata={'artist': 'Nicolas P. Rougier'})
+
+    elif args.out:
+        # initialize storage dict
+        va = np.zeros(args.frames)
+
+        # run loop
+        if not args.export:
+            for i in range(0,args.frames):
+                va[i] = flock.get_va()
+                flock.run()
+
+        # save to file
+        np.savez(args.out, va=va)
     else:
         plt.show()
 

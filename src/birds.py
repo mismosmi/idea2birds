@@ -97,7 +97,7 @@ class Flock:
         self.velocity += acceleration
         if self.args.random or self.args.eta:
             self.random_turn()
-#        limit(self.velocity, self.args.max_velocity, self.args.min_velocity)
+        limit(self.velocity, self.args.max_velocity, self.args.min_velocity)
         self.position += self.velocity
         self.position %= [width, height]
 
@@ -121,11 +121,12 @@ class Flock:
     def calc_alignment(self, mask, count):
         # Compute the average velocity of local neighbours
         target = np.dot(mask, self.velocity)/count
-        print(target)
+
         # Compute steering
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
         target = self.args.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
-        np.subtract(target, self.velocity, out=target, where=norm != 0)
+        target -= self.velocity
+
         
         if self.args.max_acceleration:
             limit(target, self.args.max_acceleration)

@@ -19,7 +19,7 @@ def limit(target, upperbound=False, lowerbound=False):
     if upperbound:
         np.multiply(target, upperbound/norm, out=target, where=norm > upperbound)
     if lowerbound:
-        np.multiply(target, lowerbound/norm, out=target, where=norm < lowerbound)
+        np.multiply(target, lowerbound/norm, out=target, where=np.logical_and(norm < lowerbound, norm != 0))
 
 
 
@@ -88,16 +88,16 @@ class Flock:
             mask_3 = mask_2
             mask_3_count = mask_2_count
 
-        separation = self.calc_separation(mask_1,mask_1_count)
-        alignment = self.calc_alignment(mask_2,mask_2_count)
-        cohesion = self.calc_cohesion(mask_3,mask_3_count)
+        separation = self.calc_separation(mask_1,mask_1_count)*self.args.separation if self.args.separation else 0
+        alignment = self.calc_alignment(mask_2,mask_2_count)*self.args.alignment if self.args.alignment else 0
+        cohesion = self.calc_cohesion(mask_3,mask_3_count)*self.args.cohesion if self.args.cohesion else 0
 
 
-        acceleration = self.args.separation * separation + self.args.alignment * alignment + self.args.cohesion * cohesion
+        acceleration = separation + alignment + cohesion
         self.velocity += acceleration
-        if self.args.random:
+        if self.args.random or self.args.eta:
             self.random_turn()
-        limit(self.velocity, self.args.max_velocity, self.args.min_velocity)
+#        limit(self.velocity, self.args.max_velocity, self.args.min_velocity)
         self.position += self.velocity
         self.position %= [width, height]
 
@@ -114,8 +114,6 @@ class Flock:
         # wrap around
         np.subtract(self.dx, np.sign(self.dx)*width, out=self.dx, where=np.absolute(self.dx) > width/2)
         np.subtract(self.dy, np.sign(self.dy)*height, out=self.dy, where=np.absolute(self.dy) > height/2)
-        np.add(width+1, self.dx, out=self.dx, where=-self.dx > width/2)
-        np.add(height+1, self.dy, out=self.dy, where=-self.dy > height/2)
 
         # return hypotenuse of corresponding elements i.e. distance
         return np.hypot(self.dx, self.dy)
@@ -123,13 +121,14 @@ class Flock:
     def calc_alignment(self, mask, count):
         # Compute the average velocity of local neighbours
         target = np.dot(mask, self.velocity)/count
-        
+        print(target)
         # Compute steering
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
         target = self.args.max_velocity * np.divide(target, norm, out=target, where=norm != 0)
-        target -= self.velocity
-
-        limit(target, self.args.max_acceleration)
+        np.subtract(target, self.velocity, out=target, where=norm != 0)
+        
+        if self.args.max_acceleration:
+            limit(target, self.args.max_acceleration)
         return target
 
 
@@ -151,7 +150,8 @@ class Flock:
         # Compute the resulting steering
         target -= self.velocity
 
-        limit(target, self.args.max_acceleration)
+        if self.args.max_acceleration:
+            limit(target, self.args.max_acceleration)
         return target
 
 
@@ -172,10 +172,12 @@ class Flock:
         # Compute the resulting steering
         target -= self.velocity
 
-        limit(target, self.args.max_acceleration)
+        if self.args.max_acceleration:
+            limit(target, self.args.max_acceleration)
         return target
 
     def random_turn(self):
+        print("random")
         if self.args.eta:
             angles = np.random.uniform(-self.args.eta/2,self.args.eta/2,n)
         else:
@@ -252,21 +254,21 @@ def update(*args):
 
     
 defaults = argparse.Namespace()
-defaults.angle = 60.
-defaults.max_velocity = 1.
-defaults.min_velocity = 0.5
+defaults.angle = 0
+defaults.max_velocity = 3.
+defaults.min_velocity = 3.
 defaults.v = None
-defaults.max_acceleration = 0.03
-defaults.width = 640
-defaults.height = 480
-defaults.n = 500
-defaults.random = 0.1
-defaults.alignment_radius = 50
+defaults.max_acceleration = 0
+defaults.width = 500
+defaults.height = 500
+defaults.n = 100
+defaults.random = 0
+defaults.alignment_radius = 100
 defaults.cohesion_radius = 50
 defaults.separation_radius = 25
 defaults.alignment = 1
-defaults.cohesion = 1
-defaults.separation = 1.5
+defaults.cohesion = 0
+defaults.separation = 0
 defaults.frames = 1000
 defaults.vfile = "birds.mp4"
 defaults.fps = 40

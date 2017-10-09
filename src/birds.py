@@ -176,15 +176,16 @@ def update(*args):
     
 defaults = argparse.Namespace()
 defaults.angle = 0
-defaults.v = 3.
-defaults.width = 500
-defaults.height = 500
+defaults.v = 0.03
+defaults.width = 5
+defaults.height = 5
 defaults.n = 100
-defaults.radius = 100
+defaults.radius = 1
 defaults.frames = 1000
 defaults.vfile = "birds.mp4"
 defaults.fps = 40
 defaults.eta = 0
+defaults.scale = 100
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
@@ -193,8 +194,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--angle", "-a", help="Boid field of Vision [deg], default="+str(defaults.angle), type=float, default=defaults.angle)
     parser.add_argument("-v", help="Velocity, default="+str(defaults.v), type=float, default=defaults.v)
-    parser.add_argument("--width", help="Range for x-coordinate, default="+str(defaults.width), type=int, default=defaults.width)
-    parser.add_argument("--height", help="Range for y-coordinate, default="+str(defaults.height),type=int, default=defaults.height)
+    parser.add_argument("--width", help="Range for x-coordinate, default="+str(defaults.width), type=float, default=defaults.width)
+    parser.add_argument("--height", help="Range for y-coordinate, default="+str(defaults.height),type=float, default=defaults.height)
+    parser.add_argument("-L", help="Set side length at once: equals --width L --height L", type=float)
     parser.add_argument("--n", "-n", help="Number of boids, default="+str(defaults.n),type=int, default=defaults.n)
     parser.add_argument("--eta", help="Generates Angles -eta/2 < delta Theta < eta/2, default="+str(defaults.eta), type=float, default=defaults.eta)
     parser.add_argument("--radius", "-r", help="Viewing Radius, default="+str(defaults.radius), type=int, default=defaults.radius)
@@ -202,7 +204,8 @@ if __name__ == '__main__':
     parser.add_argument("--frames", help="Number of frames for export to video or parameter record file, default="+str(defaults.frames), type=int, default=defaults.frames)
     parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults.vfile), type=str, default=defaults.vfile)
     parser.add_argument("--fps", help="Set Video Framerate for export, default="+str(defaults.fps), type=int, default=defaults.fps)
-    parser.add_argument("--scale", help="Scale field size.", type=float)
+    parser.add_argument("--scale", "-s", help="Scale field size, radius, v, default="+str(defaults.scale), type=float, default=defaults.scale)
+    parser.add_argument("--rho", help="Set constant density and calculate L from n and rho", type=float)
     parser.add_argument("--out", "-o", help="Specify output File for recording Parameters, Filetype: .npz", type=str)
     parser.add_argument("--batch", "-b", help="Batch mode: no live display, no video export", action="store_true")
 
@@ -211,14 +214,26 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    if args.rho:
+        if args.L:
+            print("Warning: --rho option overwrites -L")
+        args.L = np.sqrt(args.n/args.rho)
+
+    if args.L:
+        if args.width or args.height:
+            print("Warning: -L option overwrites --width and --height")
+        args.width = args.L
+        args.height = args.L
 
     if args.scale:
         width = int(args.scale * args.width)
         height = int(args.scale * args.height)
-        n = args.n
+        args.radius *= args.scale
+        args.v *= args.scale
     else:
-        width, height, n = args.width, args.height, args.n
+        width, height = args.width, args.height
 
+    n = args.n
     
     flock = Flock(args)
     fig = plt.figure(figsize=(10, 10*height/width), facecolor="white")

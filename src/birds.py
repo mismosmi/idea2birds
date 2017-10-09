@@ -11,51 +11,44 @@ from matplotlib.collections import PathCollection
 import time
 import argparse
 
-width, height, n = 640,480,500
-
-def limit(target, upperbound=False, lowerbound=False):
-# Multiplies Vector by a factor so that lowerbound < |v| < upperbound
-    norm = np.sqrt((target*target).sum(axis=1)).reshape(n,1)
-    if upperbound:
-        np.multiply(target, upperbound/norm, out=target, where=norm > upperbound)
-    if lowerbound:
-        np.multiply(target, lowerbound/norm, out=target, where=np.logical_and(norm < lowerbound, norm != 0))
-
-
 
 class Flock:
-    def __init__(self, args):
+    def __init__(self, **kwargs):
+
+        self.args = parse_kwargs(kwargs)
+        n = self.args["n"]
 
         # randomly distributed starting velocities, might come out pretty much the same as if you just set self.velocity = np.zeros((n,2),dtype=np.float32) but avoids division by zero.
-        angles = np.random.uniform(0,2*np.pi,n)
-        self.velocity = (np.array([np.cos(angles),np.sin(angles)])*args.v).astype(np.float32).T
-        self.position = np.random.rand(n,2).astype(np.float32)*[width,height]
+        angles = np.random.uniform(0,2*np.pi,self.args["n"])
+        self.velocity = (np.array([np.cos(angles),np.sin(angles)])*self.args["v"]).astype(np.float32).T
+        self.position = np.random.rand(n,2).astype(np.float32)*[self.args["width"],self.args["height"]]
 
         # test boid configuration
         if n<=3:
-            self.position = np.array([[width/2+15,height/2],[width/2-15,height/2], [width/2,height/2+15]],dtype=np.float32)
-            self.velocity = np.array([[self.args.v,0],[-self.args.v,0],[self.args.v,0]],dtype=np.float32)
+            self.position = np.array([[self.args["width"]/2+15,self.args["height"]/2],[self.args["width"]/2-15,self.args["height"]/2], [self.args["width"]/2,self.args["height"]/2+15]],dtype=np.float32)
+            self.velocity = np.array([[self.args["v"],0],[-self.args["v"],0],[self.args["v"],0]],dtype=np.float32)
             self.position = self.position[0:n,:]
             self.velocity = self.velocity[0:n,:]
 
-        self.args = args
 
-        if args.angle == 0:
+        if self.args["angle"] == 0:
             self.angle_view = False
         else:
             # half of viewing angle + deg->rad
-            self.angle_view = args.angle/360*np.pi
+            self.angle_view = self.args["angle"]/360*np.pi
 
         
     def get_va(self):
-        if self.args.v:
+        n = self.args["n"]
+        if self.args["v"]:
             vges = np.sum(self.velocity,axis=0)
-            return 1/(n*self.args.v) * np.sqrt((vges*vges).sum())
+            return 1/(n*self.args["v"]) * np.sqrt((vges*vges).sum())
 
     def run(self):
+        n = self.args["n"]
         self.distance = self.calc_distance() 
         
-        mask = (self.distance < self.args.radius)
+        mask = (self.distance < self.args["radius"])
 
         # check if viewing-angle (theta_velocity) +- angle_view/2 matches distance-vector to neighbors (theta(pos1-pos2))
         if self.angle_view:
@@ -65,14 +58,15 @@ class Flock:
     
         self.calc_velocity(mask,mask_count)
 
-        if  self.args.eta:
+        if self.args["eta"]:
             self.random_turn()
 
         self.position += self.velocity
-        self.position %= [width, height]
+        self.position %= [self.args["width"], self.args["height"]]
 
 
     def calc_distance(self):
+        n = self.args["n"]
         """
         Calculate distance between birds. Return n x n array with each row
         corresponding to each bird's distance to the others
@@ -82,31 +76,39 @@ class Flock:
         self.dy = np.subtract.outer(self.position[:, 1], self.position[:, 1])
 
         # wrap around
-        np.subtract(self.dx, np.sign(self.dx)*width, out=self.dx, where=np.absolute(self.dx) > width/2)
-        np.subtract(self.dy, np.sign(self.dy)*height, out=self.dy, where=np.absolute(self.dy) > height/2)
+        np.subtract(self.dx, np.sign(self.dx)*self.args["width"], out=self.dx, where=np.absolute(self.dx) > self.args["width"]/2)
+        np.subtract(self.dy, np.sign(self.dy)*self.args["height"], out=self.dy, where=np.absolute(self.dy) > self.args["height"]/2)
 
         # return hypotenuse of corresponding elements i.e. distance
         return np.hypot(self.dx, self.dy)
 
 
     def calc_velocity(self, mask, count):
+        n = self.args["n"]
         # Compute the average velocity of local neighbours
         target = np.dot(mask, self.velocity)/count
 
         # Compute steering
         norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
-        target = self.args.v * np.divide(target, norm, out=target, where=norm != 0)
+        target = self.args["v"] * np.divide(target, norm, out=target, where=norm != 0)
 
         self.velocity = target
         return
 
 
     def random_turn(self):
-        angles = np.random.uniform(-self.args.eta/2,self.args.eta/2,n)
-        c = np.cos(angles)
-        s = np.sin(angles)
-        self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s
-        self.velocity[:,1] = self.velocity[:,1]*c + self.velocity[:,0]*s
+        angles = np.random.uniform(-self.args["eta"]/2,self.args["eta"]/2,self.args["n"])
+        
+        # Option 1 using addition theorem
+        #c = np.cos(angles)
+        #s = np.sin(angles)
+        #self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s
+        #self.velocity[:,1] = self.velocity[:,1]*c + self.velocity[:,0]*s
+
+        # Option 2 using tan/arctan with same result
+        av = np.arctan2(self.velocity[:,1],self.velocity[:,0])
+        av += angles
+        self.velocity = np.array([np.cos(av),np.sin(av)]).reshape(self.args["n"],2)
         return
         
 
@@ -166,100 +168,83 @@ def update(*args):
 
 
 
-    # Trace updating
-    if trace is not None:
-        P = flock.position.astype(int)
-        trace[height-1-P[:, 1], P[:, 0]] = .75
-        trace *= .99
-        im.set_array(trace)
+defaults = {        
+    "angle": 0,
+    "v": 0.03,
+    "width": 5,
+    "height": 5,
+    "n": 100,
+    "radius": 1,
+    "frames": 1000,
+    "vfile": "birds.mp4",
+    "fps": 40,
+    "eta": 0,
+    "scale": 100
+    }
 
+
+
+def parse_kwargs(args):
+    for key,arg in defaults.items():
+        if key not in args:
+            args[key] = arg
+
+    if "rho" in args and args["rho"]:
+        args["L"] = np.sqrt(args["n"]/args["rho"])
+
+    if "L" in args and args["L"]:
+        args["width"] = args["L"]
+        args["height"] = args["L"]
+
+    if "scale" in args and args["scale"]:
+        args["width"] = int(args["scale"] * args["width"])
+        args["height"] = int(args["scale"] * args["height"])
+        args["radius"] *= args["scale"]
+        args["v"] *= args["scale"]
+    else:
+        width, height = args["width"], args["height"]
+
+    return args
     
-defaults = argparse.Namespace()
-defaults.angle = 0
-defaults.v = 0.03
-defaults.width = 5
-defaults.height = 5
-defaults.n = 100
-defaults.radius = 1
-defaults.frames = 1000
-defaults.vfile = "birds.mp4"
-defaults.fps = 40
-defaults.eta = 0
-defaults.scale = 100
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
 
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("--angle", "-a", help="Boid field of Vision [deg], default="+str(defaults.angle), type=float, default=defaults.angle)
-    parser.add_argument("-v", help="Velocity, default="+str(defaults.v), type=float, default=defaults.v)
-    parser.add_argument("--width", help="Range for x-coordinate, default="+str(defaults.width), type=float, default=defaults.width)
-    parser.add_argument("--height", help="Range for y-coordinate, default="+str(defaults.height),type=float, default=defaults.height)
+    parser.add_argument("--angle", "-a", help="Boid field of Vision [deg], default="+str(defaults["angle"]), type=float, default=defaults["angle"])
+    parser.add_argument("-v", help="Velocity, default="+str(defaults["v"]), type=float, default=defaults["v"])
+    parser.add_argument("--width", help="Range for x-coordinate, default="+str(defaults["width"]), type=float, default=defaults["width"])
+    parser.add_argument("--height", help="Range for y-coordinate, default="+str(defaults["height"]),type=float, default=defaults["height"])
     parser.add_argument("-L", help="Set side length at once: equals --width L --height L", type=float)
-    parser.add_argument("--n", "-n", help="Number of boids, default="+str(defaults.n),type=int, default=defaults.n)
-    parser.add_argument("--eta", help="Generates Angles -eta/2 < delta Theta < eta/2, default="+str(defaults.eta), type=float, default=defaults.eta)
-    parser.add_argument("--radius", "-r", help="Viewing Radius, default="+str(defaults.radius), type=int, default=defaults.radius)
+    parser.add_argument("--n", "-n", help="Number of boids, default="+str(defaults["n"]),type=int, default=defaults["n"])
+    parser.add_argument("--eta", help="Generates Angles -eta/2 < delta Theta < eta/2, default="+str(defaults["eta"]), type=float, default=defaults["eta"])
+    parser.add_argument("--radius", "-r", help="Viewing Radius, default="+str(defaults["radius"]), type=int, default=defaults["radius"])
     parser.add_argument("--export", "-e", help="Export video file and exit", action="store_true")
-    parser.add_argument("--frames", help="Number of frames for export to video or parameter record file, default="+str(defaults.frames), type=int, default=defaults.frames)
-    parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults.vfile), type=str, default=defaults.vfile)
-    parser.add_argument("--fps", help="Set Video Framerate for export, default="+str(defaults.fps), type=int, default=defaults.fps)
-    parser.add_argument("--scale", "-s", help="Scale field size, radius, v, default="+str(defaults.scale), type=float, default=defaults.scale)
+    parser.add_argument("--frames", help="Number of frames for export to video or parameter record file, default="+str(defaults["frames"]), type=int, default=defaults["frames"])
+    parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults["vfile"]), type=str, default=defaults["vfile"])
+    parser.add_argument("--fps", help="Set Video Framerate for export, default="+str(defaults["fps"]), type=int, default=defaults["fps"])
+    parser.add_argument("--scale", "-s", help="Scale field size, radius, v, default="+str(defaults["scale"]), type=float, default=defaults["scale"])
     parser.add_argument("--rho", help="Set constant density and calculate L from n and rho", type=float)
     parser.add_argument("--out", "-o", help="Specify output File for recording Parameters, Filetype: .npz", type=str)
     parser.add_argument("--batch", "-b", help="Batch mode: no live display, no video export", action="store_true")
 
 
 
-
     args = parser.parse_args()
-
-    if args.rho:
-        if args.L:
-            print("Warning: --rho option overwrites -L")
-        args.L = np.sqrt(args.n/args.rho)
-
-    if args.L:
-        if args.width or args.height:
-            print("Warning: -L option overwrites --width and --height")
-        args.width = args.L
-        args.height = args.L
-
-    if args.scale:
-        width = int(args.scale * args.width)
-        height = int(args.scale * args.height)
-        args.radius *= args.scale
-        args.v *= args.scale
-    else:
-        width, height = args.width, args.height
-
-    n = args.n
     
-    flock = Flock(args)
-    fig = plt.figure(figsize=(10, 10*height/width), facecolor="white")
+    flock = Flock(**vars(args))
+
+    fig = plt.figure(figsize=(10, 10*flock.args["height"]/flock.args["width"]), facecolor="white")
     ax = fig.add_axes([0.0, 0.0, 1.0, 1.0], aspect=1, frameon=False)
-    collection = MarkerCollection(n)
+    collection = MarkerCollection(flock.args["n"])
     ax.add_collection(collection._collection)
-    ax.set_xlim(0, width)
-    ax.set_ylim(0, height)
+    ax.set_xlim(0, flock.args["width"])
+    ax.set_ylim(0, flock.args["height"])
     ax.set_xticks([])
     ax.set_yticks([])
-
-        
-            
-            
-    
     
 
-
-    # Trace
-    trace = None
-    if 0:
-        trace = np.zeros((height, width))
-        im = ax.imshow(trace, extent=[0, width, 0, height], vmin=0, vmax=1,
-                       interpolation="nearest", cmap=plt.cm.gray_r)
-
-        
 
     if args.out:
         # initialize storage arrays
@@ -267,7 +252,7 @@ if __name__ == '__main__':
             "frames": args.frames,
             "va": np.zeros(args.frames),
             "eta": args.eta,
-            "rho": n/(width*height),
+            "rho": flock.args["n"]/(flock.args["width"]*flock.args["height"]),
             "v": args.v if args.v else [args.min_velocity,args.max_velocity]
             }
 

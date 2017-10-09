@@ -45,7 +45,6 @@ class Flock:
             return 1/(n*self.args["v"]) * np.sqrt((vges*vges).sum())
 
     def run(self):
-        n = self.args["n"]
         self.distance = self.calc_distance() 
         
         mask = (self.distance < self.args["radius"])
@@ -54,7 +53,7 @@ class Flock:
         if self.angle_view:
             mask *= np.absolute(np.arctan2(self.dy.T, self.dx.T) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view
 
-        mask_count = np.maximum(mask.sum(axis=1), 1).reshape(n,1)
+        mask_count = np.maximum(mask.sum(axis=1), 1).reshape(self.args["n"],1)
     
         self.calc_velocity(mask,mask_count)
 
@@ -66,7 +65,6 @@ class Flock:
 
 
     def calc_distance(self):
-        n = self.args["n"]
         """
         Calculate distance between birds. Return n x n array with each row
         corresponding to each bird's distance to the others
@@ -84,31 +82,30 @@ class Flock:
 
 
     def calc_velocity(self, mask, count):
-        n = self.args["n"]
         # Compute the average velocity of local neighbours
         target = np.dot(mask, self.velocity)/count
 
         # Compute steering
-        norm = np.sqrt((target*target).sum(axis=1)).reshape(n, 1)
+        norm = np.sqrt((target*target).sum(axis=1)).reshape(self.args["n"], 1)
         target = self.args["v"] * np.divide(target, norm, out=target, where=norm != 0)
 
         self.velocity = target
         return
 
-
     def random_turn(self):
         angles = np.random.uniform(-self.args["eta"]/2,self.args["eta"]/2,self.args["n"])
         
         # Option 1 using addition theorem
-        #c = np.cos(angles)
-        #s = np.sin(angles)
-        #self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s
-        #self.velocity[:,1] = self.velocity[:,1]*c + self.velocity[:,0]*s
+        c = np.cos(angles)
+        s = np.sin(angles)
+        self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s
+        self.velocity[:,1] = self.velocity[:,1]*c + self.velocity[:,0]*s
 
         # Option 2 using tan/arctan with same result
-        av = np.arctan2(self.velocity[:,1],self.velocity[:,0])
-        av += angles
-        self.velocity = np.array([np.cos(av),np.sin(av)]).reshape(self.args["n"],2)
+        #av = np.arctan2(self.velocity[:,1],self.velocity[:,0])
+        #av += angles
+        #self.velocity = np.array([np.cos(av),np.sin(av)]).reshape(self.args["n"],2)
+
         return
         
 
@@ -202,7 +199,8 @@ def parse_kwargs(args):
         args["radius"] *= args["scale"]
         args["v"] *= args["scale"]
     else:
-        width, height = args["width"], args["height"]
+        args["width"] = int(args["width"])
+        args["height"] = int(args["height"])
 
     return args
     

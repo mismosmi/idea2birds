@@ -45,6 +45,7 @@ class Flock:
             return 1/(n*self.args["v"]) * np.sqrt((vges*vges).sum())
 
     def run(self):
+        n = self.args["n"]
         self.distance = self.calc_distance() 
         
         mask = (self.distance < self.args["radius"])
@@ -65,6 +66,7 @@ class Flock:
 
 
     def calc_distance(self):
+        n = self.args["n"]
         """
         Calculate distance between birds. Return n x n array with each row
         corresponding to each bird's distance to the others

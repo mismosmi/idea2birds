@@ -37,7 +37,7 @@ class Flock:
             # half of viewing angle + deg->rad
             self.angle_view = self.args["angle"]/360*np.pi
 
-        
+
     def get_va(self):
         n = self.args["n"]
         if self.args["v"]:
@@ -46,16 +46,18 @@ class Flock:
 
     def run(self):
         n = self.args["n"]
-        self.distance = self.calc_distance() 
-        
+        self.distance = self.calc_distance()
+
         mask = (self.distance < self.args["radius"])
 
         # check if viewing-angle (theta_velocity) +- angle_view/2 matches distance-vector to neighbors (theta(pos1-pos2))
         if self.angle_view:
             mask *= np.absolute(np.arctan2(self.dy.T, self.dx.T) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view
+            # mask *= np.divide( self.dx.T * self.velocity[:,0] + self.dy.T * self.velocity[:,1], self.distance, np.ones_like(self.distance), where=self.distance!=0) > np.cos(self.angle_view)
+
 
         mask_count = np.maximum(mask.sum(axis=1), 1).reshape(self.args["n"],1)
-    
+
         self.calc_velocity(mask,mask_count)
 
         if self.args["eta"]:
@@ -82,7 +84,6 @@ class Flock:
         # return hypotenuse of corresponding elements i.e. distance
         return np.hypot(self.dx, self.dy)
 
-
     def calc_velocity(self, mask, count):
         # Compute the average velocity of local neighbours
         target = np.dot(mask, self.velocity)/count
@@ -96,7 +97,7 @@ class Flock:
 
     def random_turn(self):
         angles = np.random.uniform(-self.args["eta"]/2,self.args["eta"]/2,self.args["n"])
-        
+
         # Option 1 using addition theorem
         c = np.cos(angles)
         s = np.sin(angles)
@@ -109,8 +110,6 @@ class Flock:
         #self.velocity = np.array([np.cos(av),np.sin(av)]).reshape(self.args["n"],2)
 
         return
-        
-
 
 
 class MarkerCollection:
@@ -147,17 +146,16 @@ class MarkerCollection:
         self._vertices += self._translate.reshape(n, 1, 2)
 
 
-
 def update(*args):
     global flock, collection, trace, param_record
 
     # record parameters
     if param_record:
         param_record["va"][args[0]] = flock.get_va()
-            
 
     # Flock updating
     flock.run()
+    # print(flock.get_va())
 
     collection._scale = 10
     collection._translate = flock.position
@@ -166,10 +164,10 @@ def update(*args):
     collection.update()
 
 
-
-defaults = {        
+defaults = {
     "angle": 0,
-    "v": 0.03,
+    # "v": 0.03,
+    "v": 1.0,
     "width": 5,
     "height": 5,
     "n": 100,
@@ -182,9 +180,8 @@ defaults = {
     }
 
 
-
 def parse_kwargs(args):
-    for key,arg in defaults.items():
+    for key, arg in defaults.items():
         if key not in args:
             args[key] = arg
 
@@ -205,12 +202,11 @@ def parse_kwargs(args):
         args["height"] = int(args["height"])
 
     return args
-    
+
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    
     parser = argparse.ArgumentParser()
     parser.add_argument("--angle", "-a", help="Boid field of Vision [deg], default="+str(defaults["angle"]), type=float, default=defaults["angle"])
     parser.add_argument("-v", help="Velocity, default="+str(defaults["v"]), type=float, default=defaults["v"])
@@ -219,7 +215,7 @@ if __name__ == '__main__':
     parser.add_argument("-L", help="Set side length at once: equals --width L --height L", type=float)
     parser.add_argument("--n", "-n", help="Number of boids, default="+str(defaults["n"]),type=int, default=defaults["n"])
     parser.add_argument("--eta", help="Generates Angles -eta/2 < delta Theta < eta/2, default="+str(defaults["eta"]), type=float, default=defaults["eta"])
-    parser.add_argument("--radius", "-r", help="Viewing Radius, default="+str(defaults["radius"]), type=int, default=defaults["radius"])
+    parser.add_argument("--radius", "-r", help="Viewing Radius, default="+str(defaults["radius"]), type=float, default=defaults["radius"])
     parser.add_argument("--export", "-e", help="Export video file and exit", action="store_true")
     parser.add_argument("--frames", help="Number of frames for export to video or parameter record file, default="+str(defaults["frames"]), type=int, default=defaults["frames"])
     parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults["vfile"]), type=str, default=defaults["vfile"])
@@ -263,9 +259,6 @@ if __name__ == '__main__':
                 flock.run()
     else:
         param_record = False
-        
-
-
 
     if not args.batch:
         if args.export:

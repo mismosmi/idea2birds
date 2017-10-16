@@ -166,8 +166,7 @@ def update(*args):
 
 defaults = {
     "angle": 0,
-    # "v": 0.03,
-    "v": 1.0,
+    "v": 0.03,
     "width": 5,
     "height": 5,
     "n": 100,

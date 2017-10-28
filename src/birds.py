@@ -52,8 +52,8 @@ class Flock:
 
         # check if viewing-angle (theta_velocity) +- angle_view/2 matches distance-vector to neighbors (theta(pos1-pos2))
         if self.angle_view:
-            mask *= np.absolute(np.arctan2(self.dy.T, self.dx.T) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view
-            # mask *= np.divide( self.dx.T * self.velocity[:,0] + self.dy.T * self.velocity[:,1], self.distance, np.ones_like(self.distance), where=self.distance!=0) > np.cos(self.angle_view)
+            #mask *= np.absolute(np.arctan2(self.dy.T, self.dx.T) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view
+            mask *= np.divide( self.dx.T * self.velocity[:,0] + self.dy.T * self.velocity[:,1], self.distance, np.ones_like(self.distance), where=self.distance!=0) > np.cos(self.angle_view)
 
 
         mask_count = np.maximum(mask.sum(axis=1), 1).reshape(self.args["n"],1)
@@ -164,6 +164,8 @@ def update(*args):
     collection.update()
 
 
+
+
 defaults = {
     "angle": 0,
     "v": 0.03,
@@ -259,6 +261,8 @@ if __name__ == '__main__':
     else:
         param_record = False
 
+    interval = 10 if args.fps==defaults["fps"] else 1000/args.fps
+
     if not args.batch:
         if args.export:
             animation = FuncAnimation(fig, update, interval=10, frames=args.frames)
@@ -267,7 +271,7 @@ if __name__ == '__main__':
                        metadata={'artist': 'Nicolas P. Rougier'})
 
         else:
-            animation = FuncAnimation(fig, update, interval=10, frames=args.frames, repeat=not args.out)
+            animation = FuncAnimation(fig, update, interval=interval, frames=args.frames, repeat=not args.out)
             plt.show()
 
     if args.out:

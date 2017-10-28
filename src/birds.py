@@ -20,8 +20,8 @@ class Flock:
 
         # randomly distributed starting velocities, might come out pretty much the same as if you just set self.velocity = np.zeros((n,2),dtype=np.float32) but avoids division by zero.
         angles = np.random.uniform(0,2*np.pi,self.args["n"])
-        self.velocity = (np.array([np.cos(angles),np.sin(angles)])*self.args["v"]).astype(np.float32).T
-        self.position = np.random.rand(n,2).astype(np.float32)*[self.args["width"],self.args["height"]]
+        self.velocity = (np.array([np.cos(angles),np.sin(angles)])*self.args["v"]).astype(np.float64).T
+        self.position = np.random.rand(n,2).astype(np.float64)*[self.args["width"],self.args["height"]]
 
         # test boid configuration
         if n<=3:
@@ -41,8 +41,8 @@ class Flock:
     def get_va(self):
         n = self.args["n"]
         if self.args["v"]:
-            vges = np.sum(self.velocity,axis=0)
-            return 1/(n*self.args["v"]) * np.sqrt((vges*vges).sum())
+            vsum = np.sum(self.velocity,axis=0)
+            return 1./(n*self.args["v"]) * np.sqrt((vsum*vsum).sum())
 
     def run(self):
         n = self.args["n"]
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     parser.add_argument("--export", "-e", help="Export video file and exit", action="store_true")
     parser.add_argument("--frames", help="Number of frames for export to video or parameter record file, default="+str(defaults["frames"]), type=int, default=defaults["frames"])
     parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults["vfile"]), type=str, default=defaults["vfile"])
-    parser.add_argument("--fps", help="Set Video Framerate for export, default="+str(defaults["fps"]), type=int, default=defaults["fps"])
+    parser.add_argument("--fps", help="Set Video Framerate for playback/export, default="+str(defaults["fps"]), type=int, default=defaults["fps"])
     parser.add_argument("--scale", "-s", help="Scale field size, radius, v, default="+str(defaults["scale"]), type=float, default=defaults["scale"])
     parser.add_argument("--rho", help="Set constant density and calculate L from n and rho", type=float)
     parser.add_argument("--out", "-o", help="Specify output File for recording Parameters, Filetype: .npz", type=str)
@@ -265,7 +265,7 @@ if __name__ == '__main__':
 
     if not args.batch:
         if args.export:
-            animation = FuncAnimation(fig, update, interval=10, frames=args.frames)
+            animation = FuncAnimation(fig, update, interval=interval, frames=args.frames)
             animation.save(args.vfile, fps=args.fps, dpi=80, bitrate=-1, codec="libx264",
                        extra_args=['-pix_fmt', 'yuv420p'],
                        metadata={'artist': 'Nicolas P. Rougier'})

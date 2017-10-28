@@ -35,7 +35,7 @@
 \usepackage{subfig}
 
 
-
+\usepackage{todonotes}
 
 
 
@@ -72,7 +72,7 @@
 \pagestyle{fancy} % All pages have headers and footers
 \fancyhead{} % Blank out the default header
 \fancyfoot{} % Blank out the default footer
-\fancyhead[C]{Running title $\bullet$ May 2016 $\bullet$ Vol. XXI, No. 1} % Custom header text
+\fancyhead[C]{Bird simulation $\bullet$ \today $\bullet$ v1} % Custom header text
 \fancyfoot[RO,LE]{\thepage} % Custom footer text
 
 \usepackage{titling} % Customizing the title section
@@ -91,7 +91,7 @@
 \posttitle{\end{center}} % Article title closing formatting
 \title{Simulating a flock of birds} %Simulating a flock of birds
 \author{%
-\textsc{Steffen Randrup, Michel Smola, Andrei Timus}\thanks{A thank you or further information} \\[1ex] % Your name
+\textsc{Steffen Randrup, Michel Smola, Andrei Timus}\\[1ex] % Your name
 \normalsize University of Copenhagen \\ % Your institution
 %\normalsize \href{mailto:john@smith.com}{john@smith.com} % Your email address
 %\and % Uncomment if 2 authors are required, duplicate these 4 lines if more
@@ -105,7 +105,7 @@
 \noindent %\blindtext % Dummy abstract text - replace \blindtext with your abstract text
 
 
-In this paper we present a model for studying the behaviour of a group of particles which have some level of interaction between them. The model was inspired from the $[1]$ paper and as in$ [1]$ the particles have a constant absolute velocity and at each time step  assume the average direction of nearby neighbours with some added perturbation, $\eta$. The behaviour was studied by analysing how the average velocity of the flock $v_a$ varied when parameters like noise, density, number of particles where changed. In addition to $[1]$ we have introduced a cone of vision for every particle and studied the behaviour of the flock in the same conditions. From the simulation results it has been observed that the flock goes through a phase transition where all the particles assume the same direction. The average velocity $v_a$ played the role of an order parameter and it scaled with $(\eta_c-\eta)^\beta$, where $\beta$ is a critical exponent.
+In this paper we present a model for studying the behaviour of a group of particles which have some level of interaction between them. The model was inspired from the~\cite{Vicsek} paper\todo{Present paper and author by name. Also it probably shouldn't be in the abstract} and as in~\cite{Vicsek} the particles have a constant absolute velocity and at each time step  assume the average direction of nearby neighbours with some added perturbation, $\eta$. The behaviour was studied by analysing how the average velocity of the flock $v_a$ varied when parameters like noise, density, number of particles where changed. In addition to $[1]$ we have introduced a cone of vision for every particle and studied the behaviour of the flock in the same conditions. From the simulation results it has been observed that the flock goes through a phase transition where all the particles assume the same direction. The average velocity $v_a$ played the role of an order parameter and it scaled with $(\eta_c-\eta)^\beta$, where $\beta$ is a critical exponent.
 
 
 \end{abstract}
@@ -126,12 +126,6 @@ In this paper we present a model for studying the behaviour of a group of partic
 
 \section{Introduction}
 
-%\lettrine[nindent=0em,lines=3]{L} orem ipsum dolor sit amet, consectetur adipiscing elit.
-%\blindtext % Dummy text
-
-%\blindtext % Dummy text
-
-%------------------------------------------------
 
 The particles where distributed randomly in a square lattice of size L. Each particle had assigned a random direction $\theta$ and a constant interaction radius r. One update consisted in modifying the position of all particles according to the following equation:
 
@@ -146,127 +140,95 @@ The velocity of a particle had a constant absolute value and a direction given b
 
 where 
 \begin{equation}
-\braket{\theta(t)}_r=artan\frac{\braket{sin(\theta(t))}_r}{\braket{cos(\theta(t))}_r}
+\braket{\theta(t)}_r=\arctan\frac{\braket{sin(\theta(t))}_r}{\braket{cos(\theta(t))}_r}
 \end{equation}
 is the average direction of the velocities of nearby particles wich are inside the influence circle of radius r of the given particle.$\Delta$t represents the noise in the system and takes values with equal probability within the interval $[-\eta/2,\eta/2]$. For a constant number of particles there are 3 parameters which can be varied: $\eta$,$\rho$,and v, where v is the distance a particle travels between 2 updates.
 \begin{figure}[!htb]
 	\centering
-	\subfloat{{\includegraphics[width=2cm]{test1}}}
-	\subfloat{{\includegraphics[width=2cm]{test2}}}
+	\subfloat{{\includegraphics[width=\columnwidth/2]{test1}}}
+  \subfloat{{\includegraphics[width=\columnwidth/2]{test2}}}
 	\qquad
-	\subfloat{{\includegraphics[width=2cm]{test2}}}
-	\subfloat{{\includegraphics[width=2cm]{test2}}}
+	\subfloat{{\includegraphics[width=\columnwidth/2]{test2}}}
+	\subfloat{{\includegraphics[width=\columnwidth/2]{test2}}}
 	\caption{test for figures}
+  \label{fig:configs}
 \end{figure}
 
-Figure 1 shows the configuration of birds for different values of rho and eta. ..........................
-..................................
-
+Figure~\ref{fig:configs} shows the configuration of birds for different values of rho and eta.
 
 If the density is high enough, while the noise has low values, the system goes through a kinetic phase transition where all the particles share the same direction. In order to study this behaviour we have determined the average normalized velocity of the system and investigated how it changes when certain parameters are modified:
 \begin{equation}
-v_a=\frac{1}{Nv}\mid\sum_{i=1}^{N} v_i\mid
+v_a=\frac{1}{Nv}\left\vert\sum_{i=1}^{N} v_i\right\vert
 \end{equation}
 For the disordered phase $v_a$ is aproximatively 0, while for the ordered phase $v_a$ has the value of 1.
-%rephrase:
-In the following figure we show how $v_a$ varies with the noise $\eta$ and density  $\rho$ for a constant value of density and noise respectively.As it can be seen from the graph the overall alignment of the particles depends on the noise and for a high number of particles N the system becomes more disordered. 
-%
-\begin{figure}[!htb]
-	\centering
-	\subfloat{{\includegraphics[width=6cm]{va_over_rho}}}
-	
-	\subfloat{{\includegraphics[width=6cm]{density}}}
-	\caption{test for figures}
-\end{figure}
+\todo{refrace}
 
 The behaviour of $v_a$ is found to be similar to that of the order parameter of some equilibrium systems close to their critical point. For large system sizes the data shows scaling which is an indication of a phase transition. Therefore it's possible to describe the behaviour of $v_a$ in the thermodynamic limit using the following equations:
+\todo[inline]{This needs to be much clearer. It is not obvious how this behaviour is similar or why it's reasonable to assume it would be}
+
 \begin{equation}
-v_a \approx[\eta_c(\rho)-\eta]^\beta 
+  \label{eq:va-eta}
+  v_a \approx[\eta_c(\rho)-\eta]^\beta 
 \end{equation}
 \begin{equation}
-v_a \approx[\rho-\rho_c(eta)]^\gamma
+  \label{eq:va-rho}
+  v_a \approx[\rho-\rho_c(eta)]^\gamma
 \end{equation}
+
+We further extend the model by implementing a cone-like vision. This means, that rather than averaging the velocities over all birds within a certian radius, we only look at a slice of this circle. For a bird to be within the vision of another bird, it must be within the interaction radius, $r$, and the angle between the birds velocities must be within $\pm \theta_{cone}$. In the limit $\theta_{cone} = 180 \deg$\todo{use radians for paper?} we should see the same behavior of the model as without implementation of this vision.
+
+\section{Results}
+
+The alignment, $v_a$, depends on the amount of randomness, $\eta$, in the system and the density, $\rho$, as seen in equations~\eqref{eq:va-eta} and \eqref{eq:va-rho}. In Figure\ref{fig:va_over_eta} we see how, the alignment of the birds decreases as the randomness of their motion increases. The decrease is to be expected as a higher degree of randomness should disrupt alignment. What might be more interesting is the general shape of the curves. We may then determine $\beta$ from equation\eqref{eq:va-eta} to be \todo{get value of $\beta$} \todo{What do we use $\beta$ for?}. This is also shown in figure~\ref{fig:criticaleta}. The results presented here are all computed without the conevision (or with $\theta_{cone} = 180\deg$)\todo{use radians for paper?}. The effects of it will be presented in \ref{subsec:results_conevision}.
 
 \begin{figure}[!htb]
-	\centering
-	\subfloat{{\includegraphics[width=6cm]{criticaleta}}}
-
-	\caption{test for figures}
+  \centering
+  \includegraphics[width=\columnwidth]{va_over_eta}
+  \caption{Dependance of alignment on randomness}
+  \label{fig:va_over_eta}
 \end{figure}
 
 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=\columnwidth]{va_over_etac_minus_eta_over_etac}
+	\caption{Determining $\beta$}
+  \label{fig:criticaleta}
+\end{figure}
 
+Similarly we may see the effects of the density on the alignment of birds. This also fits the prediction from equation~\eqref{eq:va-rho}\todo{Does the effect of density fit the prediction?}. This is shown in figure~\ref{fig:va_over_rho}.
 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=\columnwidth]{va_over_rho}
+	\caption{Dependance of alignment on density}
+  \label{fig:va_over_rho}
+\end{figure}
 
+\subsection{Cone-like vision}
+\label{subsec:conevision}
 
+The effects of our implementation of an angle based vision are only detectable on both low randomness and low density. This is expected as a higher density causes an effective long range interaction, which may span the entire flock\todo{Is long range interaction described?}. This negates the effect of an angle based vision as the flock moves in a coherent fashion. As for randomness of motion it decreases the overall alignment of the flock as seen in figure~\ref{fig:va_over_eta}. In figure~\ref{fig:conevision} we present the overall alignment's dependance of the angle describing this cone-like vision for different densities. The randomness is kept at a low value of $\eta=0.1$. The results correspond quite well with our expectation of increasing the alignment with larger angle and for an angle of 180 degrees we see, the alignment looks like it did when we considered everything within a circle. We also notice the effects of the density of birds. As described above we expect a long range interaction between the birds to arise when the density increases. This effect is visible in the figure as we see the alignment increase faster, when the density is higher.
 
+\begin{figure}[!htb]
+\label{fig:conevision}
+  \begin{center}
+    \includegraphics[width=\columnwidth]{va_over_angle}
+  \end{center}
+  \caption{Conevision}
+\end{figure}
 
-
-
-
-
-
-
-
-
-
-
-\section{Results}
-
-Maecenas sed ultricies felis. Sed imperdiet dictum arcu a egestas. 
-\begin{itemize}
-\item Donec dolor arcu, rutrum id molestie in, viverra sed diam
-\item Curabitur feugiat
-\item turpis sed auctor facilisis
-\item arcu eros accumsan lorem, at posuere mi diam sit amet tortor
-\item Fusce fermentum, mi sit amet euismod rutrum
-\item sem lorem molestie diam, iaculis aliquet sapien tortor non nisi
-\item Pellentesque bibendum pretium aliquet
-\end{itemize}
-\blindtext % Dummy text
-
-Text requiring further explanation\footnote{Example footnote}.
-
-%------------------------------------------------
-
-\section{Results}
-
-\begin{table}
-\caption{Example table}
-\centering
-\begin{tabular}{llr}
-\toprule
-\multicolumn{2}{c}{Name} \\
-\cmidrule(r){1-2}
-First name & Last Name & Grade \\
-\midrule
-John & Doe & $7.5$ \\
-Richard & Miles & $2$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\blindtext % Dummy text
-
-\begin{equation}
-\label{eq:emc}
-e = mc^2
-\end{equation}
-
-\blindtext % Dummy text
-
-%------------------------------------------------
+\todo[inline]{There is something about how the alignment only starts increasing once the angle increases above 25 degrees}
 
 \section{Discussion}
 
-\subsection{Subsection One}
 
-A statement requiring citation \cite{Figueredo:2009dg}.
-\blindtext % Dummy text
+We have compared the collective motion of birds to a thermodynamic phase transition. The connection between these is not obvious. However we see simlilarities in how increasing the randomness\todo{temperature?} will distrupt alignment and how denser systems will display longer effective interaction range.
 
-\subsection{Subsection Two}
+The addition of a cone-like vision is, as the name suggests, inspired from birds rather than thermodynamics. To our knowledge it doesn't have an equivalent in this field\todo{does it?}, \todo[inline]{however it might tell us something about directional interaction}
 
-\blindtext % Dummy text
+The values of $v_a$ have been taken as a time average after some transient time after which the system has settled into a state, which doesn't change significantly.
+
 
 %----------------------------------------------------------------------------------------
 %	REFERENCE LIST
@@ -274,11 +236,7 @@ A statement requiring citation \cite{Figueredo:2009dg}.
 
 \begin{thebibliography}{99} % Bibliography - this is intentionally simple in this template
 
-\bibitem[Figueredo and Wolf, 2009]{Figueredo:2009dg}
-Figueredo, A.~J. and Wolf, P. S.~A. (2009).
-\newblock Assortative pairing and life history strategy - a cross-cultural
-  study.
-\newblock {\em Human Nature}, 20:317--330.
+  \bibitem{Vicsek}Vicsek
  
 \end{thebibliography}
 

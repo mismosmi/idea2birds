@@ -34,8 +34,7 @@ class Flock:
         if self.args["angle"] == 0:
             self.angle_view = False
         else:
-            # half of viewing angle + deg->rad
-            self.angle_view = self.args["angle"]/360*np.pi
+            self.angle_view = self.args["angle"]/360*np.pi*2
 
 
     def get_va(self):
@@ -52,8 +51,8 @@ class Flock:
 
         # check if viewing-angle (theta_velocity) +- angle_view/2 matches distance-vector to neighbors (theta(pos1-pos2))
         if self.angle_view:
-            #mask *= np.absolute(np.arctan2(self.dy.T, self.dx.T) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view
-            mask *= np.divide( self.dx.T * self.velocity[:,0] + self.dy.T * self.velocity[:,1], self.distance, np.ones_like(self.distance), where=self.distance!=0) > np.cos(self.angle_view)
+            # mask *= np.absolute(np.arctan2(self.dy.T, self.dx.T) - np.arctan2(self.velocity[:,1],self.velocity[:,0])) < self.angle_view
+            mask *= np.divide( self.dx.T * self.velocity[:,0] + self.dy.T * self.velocity[:,1], self.distance*self.args["v"], np.ones_like(self.distance), where=self.distance!=0) > np.cos(self.angle_view)
 
 
         mask_count = np.maximum(mask.sum(axis=1), 1).reshape(self.args["n"],1)

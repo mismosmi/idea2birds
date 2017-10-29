@@ -160,14 +160,9 @@ If the density is high enough, while the noise has low values, the system goes t
 \begin{equation}
 v_a=\frac{1}{Nv}\left\vert\sum_{i=1}^{N} v_i\right\vert
 \end{equation}
-For the disordered phase $v_a$ is aproximatively 0, while for the ordered phase $v_a$ has the value of 1.
-\todo{refrace}
-
-
-
-
-
-
+% Note: here you had a sentence about eta->0 for an unordered and eta->1 for an
+% ordered state, this is already explained in more detail in the results and,
+% i guess, makes more sense there.
 
 
 
@@ -183,8 +178,12 @@ The behaviour of $v_a$ is found to be similar to that of the order parameter of 
 \subsection{Finding $\eta_c$}
 To determine the critical noise parameter $\eta_c$ we used a quadratic fit model
 to to fit the falling curve for $\eta < \eta_c$ and a linear fit for $\eta > 
-\eta_c$, both visible in Fig.~\ref{fig:va_over_eta}. $\eta_c$ is then set to 
-the intersection of the fit curves. 
+\eta_c$, both visible in figure~\ref{fig:va_over_eta}. $\eta_c$ is then set to 
+the intersection of the fit curves. Hereby we determine
+\begin{align}
+\eta_c = 4.56***
+\end{align}
+\todo{put in final number}
 
 
 
@@ -199,26 +198,35 @@ the intersection of the fit curves.
   v_a \approx[\rho-\rho_c(eta)]^\gamma
 \end{equation}
 
-We further extend the model by implementing a cone-like vision. This means, that rather than averaging the velocities over all birds within a certian radius, we only look at a slice of this circle. For a bird to be within the vision of another bird, it must be within the interaction radius, $r$, and the angle between the birds velocities must be within $\pm \theta_{cone}$. In the limit $\theta_{cone} = 180 \deg$\todo{use radians for paper?} we should see the same behavior of the model as without implementation of this vision.
+We further extend the model by implementing a cone-like vision. This means, that 
+rather than averaging the velocities over all birds within a certian radius, we 
+only look at a slice of this circle. For a bird to be within the vision of 
+another bird, it must be within the interaction radius, $r$, and the angle 
+between the birds velocities must be within $\pm \theta_{\text{cone}}$. The 
+limit $\theta_{\text{cone}} = 2\pi$ equals the case without limiting the
+cone vision and reprocuces the results from \cite{Vicsek}.
+
 
 \section{Results}
 
-The alignment, $v_a$, depends on the amount of randomness, $\eta$, in the system and the density, $\rho$, as seen in equations~\eqref{eq:va-eta} and \eqref{eq:va-rho}. In Figure\ref{fig:va_over_eta} we see how, the alignment of the birds decreases as the randomness of their motion increases. The decrease is to be expected as a higher degree of randomness should disrupt alignment. What might be more interesting is the general shape of the curves. We may then determine $\beta$ from equation\eqref{eq:va-eta} to be \todo{get value of $\beta$} \todo{What do we use $\beta$ for?}. This is also shown in figure~\ref{fig:criticaleta}. The results presented here are all computed without the conevision (or with $\theta_{cone} = 180\deg$)\todo{use radians for paper?}. The effects of it will be presented in \ref{subsec:results_conevision}.
+The alignment, $v_a$, depends on the amount of randomness $\eta$ in the system 
+and the density $\rho$, as seen in equations~\eqref{eq:va-eta} and 
+\eqref{eq:va-rho}. In figure~\ref{fig:va_over_eta} we see how the alignment of 
+the birds decreases as the randomness of their motion increases. The decrease 
+is to be expected, as a higher degree of randomness should disrupt alignment. 
+This reflects to $v_a$, which approaches $0$ in a totally unordered state and $1$
+in a totally ordered state.
+What might be more interesting is the general shape of the curves. We may then 
+determine $\beta$ from equation~\eqref{eq:va-eta} to be \todo{get value of $\beta$} \todo{What do we use $\beta$ for?}. 
+This is also shown in figure~\ref{fig:criticaleta}. The results presented here 
+are all computed without the conevision (equivalent to $\theta_{\text{cone}} = 2\pi$). 
+Figure~\ref{fig:va_over_eta} shows how $v_a$ varies with the noise $\eta$ and 
+density $\rho$ for a constant value of density and noise respectively.
+As it can be seen from the graph the overall alignment of the particles depends 
+on the noise and for a high number of particles N the system becomes less ordered. 
+For high $\eta$ the flock reaches a coherent moving phase, while for low $\eta$ 
+the particles move randomly in the lattice.  
 
-\todo{
-TO EDIT
-For the disordered phase $v_a$ is aproximatively 0, while for the ordered phase $v_a$ has the value of 1.
-%rephrase:
-In the following figure we show how $v_a$ varies with the noise $\eta$ and density  $\rho$ for a constant value of density and noise respectively.
-
-
-As it can be seen from the graph the overall alignment of the particles depends on the noise and for a high number of particles N the system becomes more disordered. 
-
-For high values of density the flock reaches a coherent moving phase, while for low values of density the particles move randomly in the lattice.  
-
-TO EDIT
-
-}
 
 
 
@@ -226,7 +234,7 @@ TO EDIT
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{va_over_eta}
-  \caption{Dependance of alignment on randomness}
+  \caption{Dependence of alignment on randomness}
   \label{fig:va_over_eta}
 \end{figure}
 
@@ -265,7 +273,8 @@ The effects of our implementation of an angle based vision are only detectable o
 \section{Discussion}
 
 
-We have compared the collective motion of birds to a thermodynamic phase transition. The connection between these is not obvious. However we see simlilarities in how increasing the randomness\todo{temperature?} will distrupt alignment and how denser systems will display longer effective interaction range.
+We have compared the collective motion of birds to a thermodynamic phase 
+transition. However we see simlilarities in how increasing the randomness\todo{temperature?} will distrupt alignment and how more dense systems will display longer effective interaction range.
 
 The addition of a cone-like vision is, as the name suggests, inspired from birds rather than thermodynamics. To our knowledge it doesn't have an equivalent in this field\todo{does it?}, \todo[inline]{however it might tell us something about directional interaction}
 

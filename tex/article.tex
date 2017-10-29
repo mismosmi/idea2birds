@@ -108,27 +108,45 @@ In this paper we present a model for studying the behaviour of a group of partic
 
 One may consider the collective movement of birds to be described by a simple set of rules.
 In this paper we describe the movement of such a flock as a system of self-propelled particles.
-The movement of each bird or particle is governed by the movement of other birds or particles nearby.
+Our model is an extension of the model presented by Tamás Vicsek and his group in their paper ``Novel Type of Phase Transition in a System of Self-Driven Particles''~\cite{Vicsek}.
+The motion of each bird or particle is governed by the motion of other birds or particles nearby.
 In the following we may use birds and particles interchangably.
 
-In our setup the particles where distributed randomly in a square lattice of size L.
-Each particle had assigned a random direction $\theta$ and a constant interaction radius r.
+In our setup the particles where distributed randomly in a square lattice of size $L$.
+Each particle had assigned a random direction $\theta$ and a constant interaction radius $r$.
 One update consisted in modifying the position of all particles according to the following equation:
 
 \begin{equation}
 x_{i}(t+1)=x_i(t)+v_i(t)\Delta t
 \end{equation}
+
 where $\Delta$t represents the time between 2 updates.
 The velocity of a particle had a constant absolute value and a direction given by:
+
 \begin{equation}
 \theta(t+1)=\braket{\theta(t)}_r+\Delta \theta
 \end{equation} 
 
 where 
+
 \begin{equation}
-\braket{\theta(t)}_r=\arctan\frac{\braket{\sin(\theta(t))}_r}{\braket{\cos(\theta(t))}_r}
+  \braket{\theta(t)}_r=\arctan\frac{\braket{\sin(\theta(t))}_r}{\braket{\cos(\theta(t))}_r}
 \end{equation}
-is the average direction of the velocities of nearby particles wich are inside the influence circle of radius r of the given particle. $\Delta \theta$ represents the noise in the system and takes values with equal probability within the interval $[-\eta/2,\eta/2]$. For a constant number of particles there are 3 parameters which can be varied: $\eta$,$\rho$,and $v$, where $v$ is the distance a particle travels between 2 updates. $\eta$ describes the interval in which $\Delta\theta$ is picked. $\rho$ is the density of the particles. This is effectively a way of controlling the size of the lattice if the number of particles is fixed.
+%
+is the average direction of the velocities of nearby particles wich are inside the radius of influence, $r$, of the given particle.
+$\Delta \theta$ represents the noise in the system and takes values with equal probability within the interval $[-\eta/2,\eta/2]$.
+For a constant number of particles there are 3 parameters which can be varied: $\eta$,$\rho$,and $v$,
+where $v$ is the distance a particle travels between 2 updates.
+$\eta$ describes the interval in which $\Delta\theta$ is picked. $\rho$ is the density of the particles.
+This is effectively a way of controlling the size of the lattice if the number of particles is fixed.
+
+We further extend the model by implementing a cone-like vision. This means, that 
+rather than averaging the velocities over all birds within a certian radius, we 
+only look at a slice of this circle. For a bird to be within the vision of 
+another bird, it must be within the interaction radius, $r$, and the angle 
+between the birds velocities must be within $\pm \theta_{\text{cone}}$. The 
+limit $\theta_{\text{cone}} = 2\pi$ equals the case without limiting the
+cone vision and reprocuces the results from~\cite{Vicsek}.
 
 \begin{figure}[!htb]
 	\centering
@@ -159,7 +177,7 @@ For disordered motion $v_a$ is aproximatively 0, while for ordered $v_a$ has the
 
 The behaviour of $v_a$ is found to be similar to that of the order parameter of some equilibrium systems close to their critical point. For large system sizes the data shows scaling which is an indication of a phase transition. Equations~\eqref{eq:va-eta} and~\eqref{eq:va-rho} may be used to describe such a system near the critical value, at which the phase transition occours. 
 
-\subsection{Finding $\eta_c$}
+\subsection{Determining the critical noise level}
 To determine the critical noise parameter $\eta_c$ we used a quadratic fit model
 to to fit the falling curve for $\eta < \eta_c$ and a linear fit for $\eta > 
 \eta_c$, both visible in figure~\ref{fig:va_over_eta}. $\eta_c$ is then set to 
@@ -179,13 +197,6 @@ the intersection of the fit curves. Hereby we determine
   v_a \approx{\left[\rho-\rho_c (\eta)\right]}^\gamma
 \end{equation}
 
-We further extend the model by implementing a cone-like vision. This means, that 
-rather than averaging the velocities over all birds within a certian radius, we 
-only look at a slice of this circle. For a bird to be within the vision of 
-another bird, it must be within the interaction radius, $r$, and the angle 
-between the birds velocities must be within $\pm \theta_{\text{cone}}$. The 
-limit $\theta_{\text{cone}} = 2\pi$ equals the case without limiting the
-cone vision and reprocuces the results from~\cite{Vicsek}.
 
 
 \section{Results}

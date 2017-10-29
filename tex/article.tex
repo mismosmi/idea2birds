@@ -91,7 +91,19 @@
 \renewcommand{\maketitlehookd}{%
 \begin{abstract}
 \noindent
-In this paper we present a model for studying the behaviour of a group of particles which have some level of interaction between them. The model was inspired from the~\cite{Vicsek} paper\todo[inline]{Present paper and author by name. Also it probably shouldn't be in the abstract} and as in~\cite{Vicsek} the particles have a constant absolute velocity and at each time step  assume the average direction of nearby neighbours with some added perturbation, $\eta$. The behaviour was studied by analysing how the average velocity of the flock $v_a$ varied when parameters like noise, density, number of particles where changed. In addition to $[1]$ we have introduced a cone of vision for every particle and studied the behaviour of the flock in the same conditions. From the simulation results it has been observed that the flock goes through a phase transition where all the particles assume the same direction. The average velocity $v_a$ played the role of an order parameter and it scaled with $(\eta_c-\eta)^\beta$, where $\beta$ is a critical exponent.
+% In this paper we present a model for studying the behaviour of a group of particles which have some level of interaction between them. The model was inspired from the~\cite{Vicsek} paper the particles have a constant absolute velocity and at each time step  assume the average direction of nearby neighbours with some added perturbation, $\eta$.
+%The behaviour was studied by analysing how the average velocity of the flock $v_a$ varied when parameters like noise, density, number of particles where changed. In addition to $[1]$ we have introduced a cone of vision for every particle and studied the behaviour of the flock in the same conditions. From the simulation results it has been observed that the flock goes through a phase transition where all the particles assume the same direction. The average velocity $v_a$ played the role of an order parameter and it scaled with $(\eta_c-\eta)^\beta$, where $\beta$ is a critical exponent.
+The motion of a flock of birds appears complex and difficult to classify due to
+the large number of paticipants each with their own idea of where to go.
+Yet such flocks display clear collective motion. In this paper we describe such a flock
+similar to a system of self-propelled particles interacting with nearby neighbours.
+We extend this model by reducing the interaction of any given bird by only interacting with other birds
+within the bird's vision. Any bird will act as an average of any other birds it can see.
+We show that this simple model of limited interaction may cause the flock to align
+over distances larger than the extend of a single bird's interaction. Including how
+the noise in each bird's direction and density of birds affect the alignment.
+We compare the transition from unordered to ordered motion to a phase transition and
+comment on the effects of a vision based approach to this transition.
 \end{abstract}
 }
 
@@ -144,9 +156,9 @@ We further extend the model by implementing a cone-like vision. This means, that
 rather than averaging the velocities over all birds within a certian radius, we 
 only look at a slice of this circle. For a bird to be within the vision of 
 another bird, it must be within the interaction radius, $r$, and the angle 
-between the birds velocities must be within $\pm \theta_{\text{cone}}$. The 
-limit $\theta_{\text{cone}} = 2\pi$ equals the case without limiting the
-cone vision and reprocuces the results from~\cite{Vicsek}.
+between the bird's velocity and direction to the other bird must be within $\pm \theta_{\text{cone}}$. The 
+limit $\theta_{\text{cone}} = \pi$ equals the case without limiting the
+cone vision and reproduces the results from~\cite{Vicsek}.
 
 \begin{figure}[!htb]
 	\centering
@@ -164,7 +176,7 @@ The groups themselves move randomly.
 When the randomness is high and the density low, the overall motion of the birds is just random.
 In the case of high randomness and high density, the birds appear to move randomly but with an overall trend in directions
 shared among the all the birds.
-If the density is high enough, while the noise has low values, the virds move ordly in one direction.
+If the density is high enough, while the noise has low values, the birds move orderly in one direction.
 This overall trend in motion is similar to the system going through a kinetic phase transition
 where all the particles share the same direction. In order to characterize the behaviour of the flock
 we have determined the average normalized velocity of the system and investigated how it changes when the input parameters are modified:
@@ -241,8 +253,7 @@ Similarly we may see the effects of the density on the alignment of birds. This 
 	\caption{Dependance of alignment on density}\label{fig:va_over_rho}
 \end{figure}
 
-\subsection{Cone-like vision}
-\label{subsec:conevision}
+\subsection{Cone-like vision}\label{subsec:conevision}
 
 The effects of our implementation of an angle based vision are only detectable on both low randomness and low density.
 This is expected as a higher density causes an effective long range interaction, which may span the entire flock.
@@ -255,6 +266,7 @@ For an angle of 180 degrees we see, the alignment looks like it did when we cons
 We also notice the effects of the density of birds. As described above we expect a long range interaction
 between the birds to arise when the density increases.
 This effect is visible in the figure as we see the alignment increase faster, when the density is higher.
+Again we see, how the system goes between an unordered state and an ordered state. For low densities we don't reach full alignment, but that might be due to the lack of interaction between far-away birds. The trend however is similar to the phase transition presented earlier.
 
 \begin{figure}[!htb]
 \begin{center}
@@ -273,13 +285,25 @@ system to behave coherently.
 The addition of a cone-like vision is, as the name might suggests, inspired from birds rather than the study of phase transitions.
 The effects of the vision based approach were suttle. They were only detectable for low densities and noise, and for
 sufficiently large angles of vision the system would again display behavior to that without the vision based approach.
+As discussed this behavior is similar to that of a phase transition, however it is only detectable for low denisities.
+This also means, that the system doesn't align completely in the range where it is detectable,
+unlike for the other transitions presented in this paper. We have treated the angle of vision more like a property
+of the system than a variable. This is a naive approach as it assumes that any single bird only ever looks in one direction.
+
 
 The values of $v_a$ have been taken as a time average after some transient time after which the system has settled into a state, which doesn't change significantly.
 
 \section{Conclusion}
 
-In this paper we have presetend a model for studying the behaviour of interacting particles. The interaction between particles consisted in maintaining the average velocity of nearby neighbours. The system was studied when particles shared a common interaction radius and when each particle had a cone of vision. During the simulation it has been observed that the system goes through a phase transition where all particles assume the same direction. In order to describe the transition we have calculated the average normalized velocity va and investigated how it behaves when we modify the parameters of the system. In the thermodynamic limit va can be described using (5) or (6).
-By plotting these equations we have found  the critical exponent $\beta$ to be equal to\todo[inline]{$\beta$}
+% In this paper we have presetend a model for studying the behaviour of interacting particles. The interaction between particles consisted in maintaining the average velocity of nearby neighbours. The system was studied when particles shared a common interaction radius and when each particle had a cone of vision. During the simulation it has been observed that the system goes through a phase transition where all particles assume the same direction. In order to describe the transition we have calculated the average normalized velocity va and investigated how it behaves when we modify the parameters of the system. In the thermodynamic limit va can be described using (5) or (6).
+% By plotting these equations we have found  the critical exponent $\beta$ to be equal to\todo[inline]{$\beta$}
+
+In this paper we have presented a model for studying the motion of a flock of birds.
+The model contained contained few variables; density of birds, noise in their direction and an angle
+controlling which other birds influence a given bird's motion. Each of these variables gave rise
+to the movement of the flock going from disordered to ordered. For the case of the angle of vision
+the transition was only detectable for low densities and low noise as higher densities made more
+birds be within sight and high noise reduced alignment enough for the effect of the vision to be hard to detect.
 
 
 %----------------------------------------------------------------------------------------

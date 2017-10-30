@@ -12,6 +12,7 @@ import time
 import argparse
 
 
+
 class Flock:
     def __init__(self, **kwargs):
 
@@ -37,6 +38,8 @@ class Flock:
             # half of viewing angle + deg->rad
             self.angle_view = self.args["angle"]/360*np.pi
 
+        print('init: '+str(np.mean(self.velocity[:,0]**2+self.velocity[:,1]**2)))
+
 
     def get_va(self):
         n = self.args["n"]
@@ -59,6 +62,7 @@ class Flock:
         mask_count = np.maximum(mask.sum(axis=1), 1).reshape(self.args["n"],1)
 
         self.calc_velocity(mask,mask_count)
+        print('after calc_velocity: '+str(np.mean(self.velocity[:,0]**2+self.velocity[:,1]**2)))
 
         if self.args["eta"]:
             self.random_turn()
@@ -99,15 +103,9 @@ class Flock:
         angles = np.random.uniform(-self.args["eta"]/2,self.args["eta"]/2,self.args["n"])
 
         # Option 1 using addition theorem
-        c = np.cos(angles)
-        s = np.sin(angles)
-        self.velocity[:,0] = self.velocity[:,0]*c - self.velocity[:,1]*s
-        self.velocity[:,1] = self.velocity[:,1]*c + self.velocity[:,0]*s
-
-        # Option 2 using tan/arctan with same result
-        #av = np.arctan2(self.velocity[:,1],self.velocity[:,0])
-        #av += angles
-        #self.velocity = np.array([np.cos(av),np.sin(av)]).reshape(self.args["n"],2)
+        c,s = np.cos(angles), np.sin(angles)
+        # update in parrallel to avoid using updated x to calculate y
+        self.velocity[:,0], self.velocity[:,1] = self.velocity[:,0]*c - self.velocity[:,1]*s, self.velocity[:,1]*c + self.velocity[:,0]*s
 
         return
 

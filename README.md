@@ -25,7 +25,7 @@ optional arguments:
   --frames FRAMES       Number of frames for export to video or parameter
                         record file, default=1000
   --vfile VFILE         Out-File for video export, default=birds.mp4
-  --fps FPS             Set Video Framerate for export, default=40
+  --fps FPS             Set Video Framerate for playback/export, default=40
   --scale SCALE, -s SCALE
                         Scale field size, radius, v, default=100
   --rho RHO             Set constant density and calculate L from n and rho

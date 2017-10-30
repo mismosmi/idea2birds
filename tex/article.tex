@@ -42,7 +42,6 @@
 \usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry} % Document margins
 \usepackage[labelfont={bf,up},textfont={it,up}]{caption} % Custom captions under/above floats in tables or figures
 \usepackage{booktabs} % Horizontal rules in tables
-
 \usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
 
 \usepackage{enumitem} % Customized lists
@@ -254,26 +253,41 @@ Similarly we may see the effects of the density on the alignment of birds. This 
 	\caption{Dependance of alignment on density}\label{fig:va_over_rho}
 \end{figure}
 
-\subsection{Cone-like vision}\label{subsec:conevision}
+\subsection*{Cone-like vision}\label{subsec:conevision}
 
-The effects of our implementation of an angle based vision are only detectable on both low randomness and low density.
-This is expected as a higher density causes an effective long range interaction, which may span the entire flock.
-This negates the effect of an angle based vision as the flock moves in a coherent fashion.
-As for randomness of motion it decreases the overall alignment of the flock as seen in figure~\ref{fig:va_over_eta}.
-In figure~\ref{fig:conevision} we present the overall alignment's dependance of the angle describing this cone-like
-vision for different densities. The randomness is kept at a low value of $\eta=0.1$.
-The results correspond quite well with our expectation of increasing the alignment with larger angle.
-For an angle of $\pi$ we see, the alignment looks like it did when we considered every bird within the interaction radius.
-We also notice the effects of the density of birds. As described above we expect a long range interaction
-between the birds to arise when the density increases.
-This effect is visible in the figure as we see the alignment increase faster, when the density is higher.
-Again we see, how the system goes between an unordered state and an ordered state. For low densities we don't reach full alignment, but that might be due to the lack of interaction between far-away birds. The trend however is similar to the phase transition presented earlier.
+\todo[inline]{The results in this section were based on code producing wrong results, thus it must be rewritten}
+
+% The effects of our implementation of an angle based vision are only detectable on both low randomness and low density.
+% This is expected as a higher density causes an effective long range interaction, which may span the entire flock.
+% This negates the effect of an angle based vision as the flock moves in a coherent fashion.
+% As for randomness of motion it decreases the overall alignment of the flock as seen in figure~\ref{fig:va_over_eta}.
+% In figure~\ref{fig:conevision} we present the overall alignment's dependance of the angle describing this cone-like
+% vision for different densities. The randomness is kept at a low value of $\eta=0.1$.
+% The results correspond quite well with our expectation of increasing the alignment with larger angle.
+% For an angle of $\pi$ we see, the alignment looks like it did when we considered every bird within the interaction radius.
+% We also notice the effects of the density of birds. As described above we expect a long range interaction
+% between the birds to arise when the density increases.
+% This effect is visible in the figure as we see the alignment increase faster, when the density is higher.
+% Again we see, how the system goes between an unordered state and an ordered state. For low densities we don't reach full alignment, but that might be due to the lack of interaction between far-away birds. The trend however is similar to the phase transition presented earlier.
+
+The cone-like vision has no or little effect on the final alignment of the birds, only the time it takes to reach this level of alignment.
+What we do see however is the shape of the formed groups. In stead of forming dense groups, the birds now form lines or open
+triangles whose shapes are defined by the angle of vision. An example of such a configuration is seen in Figure~\ref{fig:angle-birds}.
+In Figure~\ref{fig:conevision} we see how the effect of the cone-like vision has little effect on the final alignment. There appears to be a slight upward trend for the density $\rho=0.1$. This may be attributed to the time taken to reach alignment as each data point has been taken after the same amount of time. It may not have been long enough for the smaller angles. For the cases $\rho=1,0.01$ They both reach the alignment shown in Figure~\ref{fig:va_over_rho}. The runtime before measuring $v_a$ has for Figure~\ref{fig:conevision} been twice as long as for the other figures.
+
 
 \begin{figure}[!htb]
 \begin{center}
 \includegraphics[width=\columnwidth]{va_over_angle}
 \end{center}
 \caption{Conevision}\label{fig:conevision}
+\end{figure}
+
+\begin{figure}[!htb]
+\begin{center}
+\includegraphics[width=\columnwidth]{angles}
+\end{center}
+\caption{Angles  ..... }\label{fig:angle-birds}
 \end{figure}
 
 \section{Discussion}
@@ -284,11 +298,13 @@ will distrupt alignment and how denser systems will display longer effective int
 system to behave coherently.
 
 The addition of a cone-like vision is, as the name might suggests, inspired from birds rather than the study of phase transitions.
-The effects of the vision based approach were suttle. They were only detectable for low densities and noise, and for
-sufficiently large angles of vision the system would again display behavior to that without the vision based approach.
-As discussed this behavior is similar to that of a phase transition, however it is only detectable for low denisities.
-This also means, that the system doesn't align completely in the range where it is detectable,
-unlike for the other transitions presented in this paper. We have treated the angle of vision more like a property
+\todo[inline]{The previous discussion of cone-like vision was wrong, so rewrite it}
+%The effects of the vision based approach were suttle. They were only detectable for low densities and noise, and for
+%sufficiently large angles of vision the system would again display behavior to that without the vision based approach.
+%As discussed this behavior is similar to that of a phase transition, however it is only detectable for low denisities.
+%This also means, that the system doesn't align completely in the range where it is detectable,
+%unlike for the other transitions presented in this paper.
+We have treated the angle of vision more like a property
 of the system than a variable. This is a naive approach as it assumes that any single bird only ever looks in one direction.
 
 

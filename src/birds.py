@@ -37,7 +37,6 @@ class Flock:
         else:
             self.angle_view = self.args["angle"]/360*np.pi*2
 
-        print('init: '+str(np.mean(self.velocity[:,0]**2+self.velocity[:,1]**2)))
 
 
     def get_va(self):
@@ -61,7 +60,6 @@ class Flock:
         mask_count = np.maximum(mask.sum(axis=1), 1).reshape(self.args["n"],1)
 
         self.calc_velocity(mask,mask_count)
-        print('after calc_velocity: '+str(np.mean(self.velocity[:,0]**2+self.velocity[:,1]**2)))
 
         if self.args["eta"]:
             self.random_turn()

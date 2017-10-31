@@ -102,7 +102,7 @@ We show that this simple model of limited interaction may cause the flock to ali
 over distances larger than the extend of a single bird's interaction. Including how
 the noise in each bird's direction and density of birds affect the alignment.
 We compare the transition from unordered to ordered motion to a phase transition and
-comment on the effects of a vision based approach to this transition.
+comment on how a vision based approach cause triangular groupings similar to those of migratory birds.
 \end{abstract}
 }
 
@@ -126,6 +126,7 @@ In the following we may use birds and particles interchangably.
 In our setup the particles where distributed randomly in a square lattice of size $L$.
 Each particle had assigned a random direction $\theta$ and a constant interaction radius $r$.
 One update consisted in modifying the position of all particles according to the following equation:
+
 
 \begin{equation}
 x_{i}(t+1)=x_i(t)+v_i(t)\Delta t
@@ -172,8 +173,8 @@ cone vision and reproduces the results from~\cite{Vicsek}.
 Figure~\ref{fig:configs} shows the configuration of birds for different values of $\rho$ and $\eta$.  
 For low values of both $\rho$ and $\eta$ the birds tend to form smaller groups in which the birds move in the same direction.
 The groups themselves move randomly.
-When the randomness is high and the density low, the overall motion of the birds is just random.
-In the case of high randomness and high density, the birds appear to move randomly but with an overall trend in directions
+When the noise is high and the density low, the overall motion of the birds is just random.
+In the case of high noise and high density, the birds appear to move randomly but with an overall trend in directions
 shared among the all the birds.
 If the density is high enough, while the noise has low values, the birds move orderly in one direction.
 This overall trend in motion is similar to the system going through a kinetic phase transition
@@ -184,11 +185,12 @@ we have determined the average normalized velocity of the system and investigate
 v_a=\frac{1}{Nv}\left\vert\sum_{i=1}^{N} v_i\right\vert
 \end{equation}
 
-For disordered motion $v_a$ is aproximatively 0, while for ordered $v_a$ has the value near 1.
+For disordered motion $v_a$ is aproximatively 0, whereas for ordered motion $v_a$ takes on a value near 1.
+In our calculations the values of $v_a$ have been taken as a time average after some transient time after which the system has settled into a state, which doesn't change significantly.
 
 The behaviour of $v_a$ is found to be similar to that of the order parameter of some equilibrium systems close to their critical point. For large system sizes the data shows scaling which is an indication of a phase transition. Equations~\eqref{eq:va-eta} and~\eqref{eq:va-rho} may be used to describe such a system near the critical value, at which the phase transition occours. 
 
-\subsection{Determining the critical noise level}
+\subsection*{Determining the critical noise level}
 To determine the critical noise parameter $\eta_c$ we used a quadratic fit model
 to to fit the falling curve for $\eta < \eta_c$ and a linear fit for $\eta > 
 \eta_c$, both visible in figure~\ref{fig:va_over_eta}. $\eta_c$ is then set to 
@@ -213,29 +215,30 @@ the intersection of the fit curves. Hereby we determine
 % \section{Results}
 \section{From disorder to order}
 
-The alignment, $v_a$, depends on the amount of randomness $\eta$ in the system 
+The alignment, $v_a$, depends on the amount of noise $\eta$ in the system 
 and the density $\rho$, as seen in equations~\eqref{eq:va-eta} and~\eqref{eq:va-rho}.
 In figure~\ref{fig:va_over_eta} we see how the alignment of 
 the birds decreases as the randomness of their motion increases. The decrease 
-is to be expected, as a higher degree of randomness should disrupt alignment. 
+is to be expected, as a higher degree of noise should disrupt alignment. 
 This reflects to $v_a$, which approaches $0$ in a totally unordered state and $1$
 in a totally ordered state.
-What might be more interesting is the general shape of the curves. We may then 
+What might be more interesting is the general shape of the curves as they as mentioned are similar to
+that of a phase transition. We may then 
 determine $\beta$ from equation~\eqref{eq:va-eta} to be \todo[inline]{get value of $\beta$}
 This is also shown in figure~\ref{fig:criticaleta}. The results presented here 
 are all computed without the conevision (equivalent to $\theta_{\text{cone}} = \pi$). 
 Figure~\ref{fig:va_over_eta} shows how $v_a$ varies with the noise $\eta$ and 
 density $\rho$ for a constant value of density and noise respectively.
-As seen in the graph the overall alignment of the particles depends 
+As seen in Figure~\ref{fig:va_over_eta} the overall alignment of the particles depends 
 on the noise and for a high number of particles N the system becomes less ordered. 
-For high $\eta$ the flock reaches a coherent moving phase, while for low $\eta$ 
+For low $\eta$ the flock reaches a coherent moving phase, while for high $\eta$ 
 the particles move randomly in the lattice.  
 
 
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{va_over_eta}
-  \caption{Dependence of alignment on randomness}\label{fig:va_over_eta}
+  \caption{Dependance of alignment on randomness}\label{fig:va_over_eta}
 \end{figure}
 
 
@@ -255,25 +258,15 @@ Similarly we may see the effects of the density on the alignment of birds. This 
 
 \subsection*{Cone-like vision}\label{subsec:conevision}
 
-\todo[inline]{The results in this section were based on code producing wrong results, thus it must be rewritten}
-
-% The effects of our implementation of an angle based vision are only detectable on both low randomness and low density.
-% This is expected as a higher density causes an effective long range interaction, which may span the entire flock.
-% This negates the effect of an angle based vision as the flock moves in a coherent fashion.
-% As for randomness of motion it decreases the overall alignment of the flock as seen in figure~\ref{fig:va_over_eta}.
-% In figure~\ref{fig:conevision} we present the overall alignment's dependance of the angle describing this cone-like
-% vision for different densities. The randomness is kept at a low value of $\eta=0.1$.
-% The results correspond quite well with our expectation of increasing the alignment with larger angle.
-% For an angle of $\pi$ we see, the alignment looks like it did when we considered every bird within the interaction radius.
-% We also notice the effects of the density of birds. As described above we expect a long range interaction
-% between the birds to arise when the density increases.
-% This effect is visible in the figure as we see the alignment increase faster, when the density is higher.
-% Again we see, how the system goes between an unordered state and an ordered state. For low densities we don't reach full alignment, but that might be due to the lack of interaction between far-away birds. The trend however is similar to the phase transition presented earlier.
-
-The cone-like vision has no or little effect on the final alignment of the birds, only the time it takes to reach this level of alignment.
-What we do see however is the shape of the formed groups. In stead of forming dense groups, the birds now form lines or open
-triangles whose shapes are defined by the angle of vision. An example of such a configuration is seen in Figure~\ref{fig:angle-birds}.
-In Figure~\ref{fig:conevision} we see how the effect of the cone-like vision has little effect on the final alignment. There appears to be a slight upward trend for the density $\rho=0.1$. This may be attributed to the time taken to reach alignment as each data point has been taken after the same amount of time. It may not have been long enough for the smaller angles. For the cases $\rho=1,0.01$ They both reach the alignment shown in Figure~\ref{fig:va_over_rho}. The runtime before measuring $v_a$ has for Figure~\ref{fig:conevision} been twice as long as for the other figures.
+The cone-like vision has little effect on the final alignment of the birds.
+The effect only becomes apparent near the critical value of $\rho=0.1$ after which
+the alignment increases dramatically as shown in Figure~\ref{fig:va_over_rho}.
+In Figure~\ref{fig:conevision} we see how only the configuration with $\rho$ near the
+transition between the unordered and ordered states is affected by the implementation of the vision.
+There is as expected a slight upward trend in alignment as the angle of the vision is increased.
+A much more interesting result is the shape of the formed groups. In stead of forming
+dense groups, the birds now form lines or open triangles whose shapes are defined
+by the angle of vision. An example of such a configuration is seen in Figure~\ref{fig:angle-birds}.
 
 
 \begin{figure}[!htb]
@@ -287,40 +280,39 @@ In Figure~\ref{fig:conevision} we see how the effect of the cone-like vision has
 \begin{center}
 \includegraphics[width=\columnwidth]{angles}
 \end{center}
-\caption{Angles  ..... }\label{fig:angle-birds}
+\caption{Birds form lines or triangular groups when a cone-like vision is implemented and the density is low}\label{fig:angle-birds}
 \end{figure}
 
 \section{Discussion}
 
-We have compared the collective motion of birds to a phase transition.
-The connection between these is not obvious. However we do see simlilarities in how increasing the noise in the system
-will distrupt alignment and how denser systems will display longer effective interaction range. Causing the entire
-system to behave coherently.
+The shape of the formed groups when implementing the cone-like vision was a surprising result.
+The triangular shape is commonly seen in migratory birds but is usually ascribed to other factors.
+Our simpel model of simply letting the birds do as other birds within their sight reproduces this
+effect. It is easily explained by considering two birds. One approaches the other from the side.
+The first bird will see the other and follow it, whereas the second bird will see nothing and just
+continue. In this way the birds form a line. If birds approach from the other side, they will line
+up in a similar fashion causing a combined triangular shape. Once a traingle has formed it is much
+more likely for a new approaching bird to align with one of the sides of the trangle rather than
+joining the group somewhere else. In this way the triangles keep growing.
+That the effect on alignment is only detectable in a limited range also makes sense, because for
+low densities, it will be unlikely for birds to come close enough to each other to form groups.
+For higher densities there will more often be a bird within any other bird's vision. This causes
+larger, coherent groups to form.
 
-The addition of a cone-like vision is, as the name might suggests, inspired from birds rather than the study of phase transitions.
-\todo[inline]{The previous discussion of cone-like vision was wrong, so rewrite it}
-%The effects of the vision based approach were suttle. They were only detectable for low densities and noise, and for
-%sufficiently large angles of vision the system would again display behavior to that without the vision based approach.
-%As discussed this behavior is similar to that of a phase transition, however it is only detectable for low denisities.
-%This also means, that the system doesn't align completely in the range where it is detectable,
-%unlike for the other transitions presented in this paper.
-We have treated the angle of vision more like a property
-of the system than a variable. This is a naive approach as it assumes that any single bird only ever looks in one direction.
-
-
-The values of $v_a$ have been taken as a time average after some transient time after which the system has settled into a state, which doesn't change significantly.
 
 \section{Conclusion}
 
-% In this paper we have presetend a model for studying the behaviour of interacting particles. The interaction between particles consisted in maintaining the average velocity of nearby neighbours. The system was studied when particles shared a common interaction radius and when each particle had a cone of vision. During the simulation it has been observed that the system goes through a phase transition where all particles assume the same direction. In order to describe the transition we have calculated the average normalized velocity va and investigated how it behaves when we modify the parameters of the system. In the thermodynamic limit va can be described using (5) or (6).
-% By plotting these equations we have found  the critical exponent $\beta$ to be equal to\todo[inline]{$\beta$}
 
 In this paper we have presented a model for studying the motion of a flock of birds.
 The model contained contained few variables; density of birds, noise in their direction and an angle
 controlling which other birds influence a given bird's motion. Each of these variables gave rise
-to the movement of the flock going from disordered to ordered. For the case of the angle of vision
-the transition was only detectable for low densities and low noise as higher densities made more
-birds be within sight and high noise reduced alignment enough for the effect of the vision to be hard to detect.
+to the movement of the flock going between disordered and ordered. For the case of the angle based
+vision the effects on alignment was only detectable near the transition between the unordered
+and ordered state for the density of birds.
+However the vision based approach gave rise to different shapes of the groups formed when the density
+was sufficiently low. When the vision approach was not used, the groups were dense and clumped
+together. When the vision was implemented, the birds formed lines or triangular groups.
+
 
 
 %----------------------------------------------------------------------------------------

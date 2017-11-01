@@ -90,12 +90,10 @@
 \renewcommand{\maketitlehookd}{%
 \begin{abstract}
 \noindent
-% In this paper we present a model for studying the behaviour of a group of particles which have some level of interaction between them. The model was inspired from the~\cite{Vicsek} paper the particles have a constant absolute velocity and at each time step  assume the average direction of nearby neighbours with some added perturbation, $\eta$.
-%The behaviour was studied by analysing how the average velocity of the flock $v_a$ varied when parameters like noise, density, number of particles where changed. In addition to $[1]$ we have introduced a cone of vision for every particle and studied the behaviour of the flock in the same conditions. From the simulation results it has been observed that the flock goes through a phase transition where all the particles assume the same direction. The average velocity $v_a$ played the role of an order parameter and it scaled with $(\eta_c-\eta)^\beta$, where $\beta$ is a critical exponent.
 The motion of a flock of birds appears complex and difficult to classify due to
 the large number of paticipants each with their own idea of where to go.
 Yet such flocks display clear collective motion. In this paper we describe such a flock
-similar to a system of self-propelled particles interacting with nearby neighbours.
+similar to a system of self-driven particles interacting with nearby neighbours.
 We extend this model by reducing the interaction of any given bird by only interacting with other birds
 within the bird's vision. Any bird will act as an average of any other birds it can see.
 We show that this simple model of limited interaction may cause the flock to align
@@ -118,14 +116,13 @@ comment on how a vision based approach cause triangular groupings similar to tho
 \section{Collective motion of birds}
 
 One may consider the collective movement of birds to be described by a simple set of rules.
-In this paper we describe the movement of such a flock as a system of self-propelled particles.
+In this paper we describe the movement of such a flock as a system of self-driven particles.
 Our model is an extension of the model presented by Tamás Vicsek and his group in their paper ``Novel Type of Phase Transition in a System of Self-Driven Particles''~\cite{Vicsek}.
 The motion of each bird or particle is governed by the motion of other birds or particles nearby.
-In the following we may use birds and particles interchangably.
 
-In our setup the particles where distributed randomly in a square lattice of size $L$.
-Each particle had assigned a random direction $\theta$ and a constant interaction radius $r$.
-One update consisted in modifying the position of all particles according to the following equation:
+In our setup the birds were distributed randomly in a square lattice of size $L$.
+Each bird had assigned a random direction $\theta$ and a constant interaction radius $r$.
+One update consisted of modifying the position of all birds according to the following equation:
 
 
 \begin{equation}
@@ -133,7 +130,7 @@ x_{i}(t+1)=x_i(t)+v_i(t)\Delta t
 \end{equation}
 
 where $\Delta$t represents the time between 2 updates.
-The velocity of a particle had a constant absolute value and a direction given by:
+The velocity of a bird had a constant absolute value and a direction given by:
 
 \begin{equation}
 \theta(t+1)=\braket{\theta(t)}_r+\Delta \theta
@@ -145,12 +142,13 @@ where
   \braket{\theta(t)}_r=\arctan\frac{\braket{\sin(\theta(t))}_r}{\braket{\cos(\theta(t))}_r}
 \end{equation}
 %
-is the average direction of the velocities of nearby particles wich are inside the radius of influence, $r$, of the given particle.
+is the average direction of the velocities of nearby birds wich are inside the radius of influence, $r$, of the given bird.
 $\Delta \theta$ represents the noise in the system and takes values with equal probability within the interval $[-\eta/2,\eta/2]$.
-For a constant number of particles there are 3 parameters which can be varied: $\eta$,$\rho$,and $v$,
-where $v$ is the distance a particle travels between 2 updates.
-$\eta$ describes the interval in which $\Delta\theta$ is picked. $\rho$ is the density of the particles.
-This is effectively a way of controlling the size of the lattice if the number of particles is fixed.
+For a constant number of birds there are 3 parameters which can be varied: $\eta$,$\rho$,and $v$,
+where $v$ is the distance a bird travels between 2 updates. This taken as a fixed value of 0.03 as recommended by~\cite{Vicsek}.
+$\eta$ describes the interval in which $\Delta\theta$ is picked. $\rho$ is the density of the birds.
+This is effectively a way of controlling the size of the lattice if the number of birds is fixed.
+
 
 We further extend the model by implementing a cone-like vision. This means, that 
 rather than averaging the velocities over all birds within a certian radius, we 
@@ -170,7 +168,7 @@ cone vision and reproduces the results from~\cite{Vicsek}.
 	\caption{Different configurations of $\eta$ and $\rho$\\Top left: low $\eta$ low $\rho$\\Top right: Low $\eta$, high $\rho$\\Bottm left: High $\eta$, low $\rho$\\Bottom right: High $\eta$, high $\rho$}\label{fig:configs}
 \end{figure}
 
-Figure~\ref{fig:configs} shows the configuration of birds for different values of $\rho$ and $\eta$.  
+Figure~\ref{fig:configs} shows the configuration of birds for different values of $\rho$ and $\eta$. $\theta_{cone}$ is kept at $\pi$.
 For low values of both $\rho$ and $\eta$ the birds tend to form smaller groups in which the birds move in the same direction.
 The groups themselves move randomly.
 When the noise is high and the density low, the overall motion of the birds is just random.
@@ -193,17 +191,10 @@ The behaviour of $v_a$ is found to be similar to that of the order parameter of 
 If the density is too low the system doesn't reach the disordered state where $v_a\approx 0$ or in other words it doesn't go through a phase transition.In our case the noise and density played the role of a temperature-like variable. Equations~\eqref{eq:va-eta} and~\eqref{eq:va-rho} may be used to describe such a system near the critical value, at which the phase transition occours. 
 
 
-
-
-\subsection*{Determining the critical noise level}
 To determine the critical noise parameter $\eta_c$ we used a quadratic fit model
 to to fit the falling curve for $\eta < \eta_c$ and a linear fit for $\eta > 
 \eta_c$, both visible in figure~\ref{fig:va_over_eta}. $\eta_c$ is then set to 
-the intersection of the fit curves. Hereby we determine
-\begin{align}
-\eta_c = 4.56***
-\end{align}
-\todo[inline]{put in final number}
+the intersection of the fit curves. Hereby we determine $\eta_c = 4.25$
 
 
 \begin{equation}
@@ -229,15 +220,14 @@ This reflects to $v_a$, which approaches $0$ in a totally unordered state and $1
 in a totally ordered state.
 What might be more interesting is the general shape of the curves as they as mentioned are similar to
 that of a phase transition. We may then 
-determine $\beta$ from equation~\eqref{eq:va-eta} to be \todo[inline]{get value of $\beta$}
-This is also shown in figure~\ref{fig:criticaleta}. The results presented here 
+determine $\beta$ from equation~\eqref{eq:va-eta} to be 0.57 for $N=400$. This is also shown in figure~\ref{fig:criticaleta}. The results presented here 
 are all computed without the conevision (equivalent to $\theta_{\text{cone}} = \pi$). 
 Figure~\ref{fig:va_over_eta} shows how $v_a$ varies with the noise $\eta$ and 
 density $\rho$ for a constant value of density and noise respectively.
-As seen in Figure~\ref{fig:va_over_eta} the overall alignment of the particles depends 
-on the noise and for a high number of particles N the system becomes less ordered. 
+As seen in Figure~\ref{fig:va_over_eta} the overall alignment of the birds depends 
+on the noise and for a high number of birds N the system becomes less ordered. 
 For low $\eta$ the flock reaches a coherent moving phase, while for high $\eta$ 
-the particles move randomly in the lattice.  
+the birds move randomly in the lattice.  
 
 
 \begin{figure}[!htb]

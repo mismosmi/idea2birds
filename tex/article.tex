@@ -32,7 +32,7 @@
 
 \graphicspath{ {../img/} } 
 
-\usepackage{subfig}
+\usepackage{subcaption}
 \usepackage{todonotes}
 \usepackage[sc]{mathpazo} % Use the Palatino font
 \usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
@@ -160,12 +160,23 @@ cone vision and reproduces the results from~\cite{Vicsek}.
 
 \begin{figure}[!htb]
 	\centering
-	\subfloat{{\includegraphics[width=\columnwidth/2]{low-eta-low-rho}}}
-  \subfloat{{\includegraphics[width=\columnwidth/2]{low-eta-high-rho}}}
-	\qquad
-	\subfloat{{\includegraphics[width=\columnwidth/2]{high-eta-low-rho}}}
-	\subfloat{{\includegraphics[width=\columnwidth/2]{high-eta-high-rho}}}
-	\caption{Different configurations of $\eta$ and $\rho$\\Top left: low $\eta$ low $\rho$\\Top right: Low $\eta$, high $\rho$\\Bottm left: High $\eta$, low $\rho$\\Bottom right: High $\eta$, high $\rho$}\label{fig:configs}
+        \begin{subfigure}[b]{0.45\columnwidth}
+	    \includegraphics[width=\columnwidth]{low-eta-low-rho}
+            \caption{Low $\eta$, low $\rho$}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\columnwidth}
+            \includegraphics[width=\columnwidth]{low-eta-high-rho}
+            \caption{Low $\eta$, high $\rho$}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\columnwidth}
+	    \includegraphics[width=\columnwidth]{high-eta-low-rho}
+            \caption{High $\eta$, low $\rho$}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\columnwidth}
+	    \includegraphics[width=\columnwidth]{high-eta-high-rho}
+            \caption{High $\eta$, high $\rho$}
+        \end{subfigure}
+	\caption{Different configurations of $\eta$ and $\rho$}\label{fig:configs}
 \end{figure}
 
 Figure~\ref{fig:configs} shows the configuration of birds for different values of $\rho$ and $\eta$. $\theta_{cone}$ is kept at $\pi$.
@@ -173,7 +184,7 @@ For low values of both $\rho$ and $\eta$ the birds tend to form smaller groups i
 The groups themselves move randomly.
 When the noise is high and the density low, the overall motion of the birds is just random.
 In the case of high noise and high density, the birds appear to move randomly but with an overall trend in directions
-shared among the all the birds.
+shared among all the birds.
 If the density is high enough, while the noise has low values, the birds move orderly in one direction.
 This overall trend in motion is similar to the system going through a kinetic phase transition
 where all the particles share the same direction. In order to characterize the behaviour of the flock
@@ -258,7 +269,7 @@ The effect only becomes apparent near the critical value of $\rho=0.1$ after whi
 the alignment increases dramatically as shown in Figure~\ref{fig:va_over_rho}.
 In Figure~\ref{fig:conevision} we see how only the configuration with $\rho$ near the
 transition between the unordered and ordered states is affected by the implementation of the vision.
-There is as expected a slight upward trend in alignment as the angle of the vision is increased.
+There is, as expected, a slight upward trend in alignment as the angle of the vision is increased.
 A much more interesting result is the shape of the formed groups. In stead of forming
 dense groups, the birds now form lines or open triangles whose shapes are defined
 by the angle of vision. An example of such a configuration is seen in Figure~\ref{fig:angle-birds}.
@@ -282,11 +293,12 @@ by the angle of vision. An example of such a configuration is seen in Figure~\re
 
 The shape of the formed groups when implementing the cone-like vision was a surprising result.
 The triangular shape is commonly seen in migratory birds but is usually ascribed to other factors.
-Our simpel model of simply letting the birds do as other birds within their sight reproduces this
+Our simple model of simply letting the birds do as other birds within their sight reproduces this
 effect. It is easily explained by considering two birds. One approaches the other from the side.
-The first bird will see the other and follow it, whereas the second bird will see nothing and just
-continue. In this way the birds form a line. If birds approach from the other side, they will line
-up in a similar fashion causing a combined triangular shape. Once a traingle has formed it is much
+The foremost bird will see nothing and just continue whereas the approaching bird will see the
+other and follow it.
+In this way the birds form a line. If birds approach from the other side, they will line
+up in a similar fashion causing a combined triangular shape. Once a triangle has formed it is much
 more likely for a new approaching bird to align with one of the sides of the trangle rather than
 joining the group somewhere else. In this way the triangles keep growing.
 That the effect on alignment is only detectable in a limited range also makes sense, because for
@@ -299,7 +311,7 @@ larger, coherent groups to form.
 
 
 In this paper we have presented a model for studying the motion of a flock of birds.
-The model contained contained few variables; density of birds, noise in their direction and an angle
+The model contained few variables: density of birds, noise in their direction and an angle
 controlling which other birds influence a given bird's motion. Each of these variables gave rise
 to the movement of the flock going between disordered and ordered. For the case of the angle based
 vision the effects on alignment was only detectable near the transition between the unordered

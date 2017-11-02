@@ -35,7 +35,7 @@ class Flock:
         if self.args["angle"] == 0:
             self.angle_view = False
         else:
-            self.angle_view = self.args["angle"]/180*np.pi
+            self.angle_view = self.args["angle"]/2
 
 
 
@@ -134,12 +134,12 @@ class MarkerCollection:
             # viewing cone
             cos_ang = np.cos(angle/2)
             sin_ang = np.sin(angle/2)
-            bl = np.tan(np.pi/8) * 4/3 * radius
+            bl = np.tan(angle/4*np.pi) * 4/3 
             v_cone = np.array([(+0.0, +0.0), 
-            (-sin_ang*radius, -cos_ang*radius), 
-            (-sin_ang*radius + -cos_ang*bl, -cos_ang*radius + sin_ang*bl), 
-            (sin_ang*radius + cos_ang*bl, -cos_ang*radius + sin_ang*bl), 
-            (sin_ang*radius, -cos_ang*radius), 
+            (-sin_ang*radius, cos_ang*radius), 
+            (-sin_ang*radius + cos_ang*bl, cos_ang*radius + sin_ang*bl), 
+            (sin_ang*radius - cos_ang*bl, cos_ang*radius + sin_ang*bl), 
+            (sin_ang*radius, cos_ang*radius), 
             (0,0)])
             c_cone = np.array([Path.MOVETO, Path.LINETO, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CLOSEPOLY]) 
             self._base_vertices_cone = np.tile(v_cone.reshape(-1),n).reshape(n, len(v_cone), 2)
@@ -237,7 +237,7 @@ def parse_kwargs(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--angle", "-a", help="Boid field of Vision [deg], default="+str(defaults["angle"]), type=float, default=defaults["angle"])
+    parser.add_argument("--angle", "-a", help="Boid field of Vision [rad], default="+str(defaults["angle"]), type=float, default=defaults["angle"])
     parser.add_argument("-v", help="Velocity, default="+str(defaults["v"]), type=float, default=defaults["v"])
     parser.add_argument("--width", help="Range for x-coordinate, default="+str(defaults["width"]), type=float, default=defaults["width"])
     parser.add_argument("--height", help="Range for y-coordinate, default="+str(defaults["height"]),type=float, default=defaults["height"])

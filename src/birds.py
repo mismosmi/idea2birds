@@ -35,7 +35,7 @@ class Flock:
         if self.args["angle"] == 0:
             self.angle_view = False
         else:
-            self.angle_view = self.args["angle"]/360*np.pi*2
+            self.angle_view = self.args["angle"]/180*np.pi
 
 
 
@@ -112,7 +112,7 @@ class MarkerCollection:
     Marker collection
     """
 
-    def __init__(self, n=100):
+    def __init__(self, n=100, angle=0, radius=0):
         v = np.array([(-0.25, -0.25), (+0.0, +0.5), (+0.25, -0.25), (0, 0)])
         c = np.array([Path.MOVETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY])
         self._base_vertices = np.tile(v.reshape(-1), n).reshape(n, len(v), 2)
@@ -121,28 +121,48 @@ class MarkerCollection:
 
         self._scale = np.ones(n)
         self._translate = np.zeros((n, 2))
-        self._rotate = np.zeros(n)
+        self._rotate = np.zeros((n,2))
 
         self._path = Path(vertices=self._vertices.reshape(n*len(v), 2),
                           codes=self._codes)
-        self._collection = PathCollection([self._path], linewidth=0.5,
-                                          facecolor="k", edgecolor="w")
+
+        # viewing cone
+        cos_ang = np.cos(angle/2)
+        sin_ang = np.sin(angle/2)
+        bl = np.tan(np.pi/8) * 4/3
+        v = np.array([(+0.0, +0.0), (-sin_ang*radius, cos_ang*radius), (-sin_ang*radius + cos_ang*bl, cos_ang*radius + sin_ang*bl), (sin_ang*radius, cos_ang*radius), (0,0)])
+        c = np.array([Path.MOVETO, Path.LINETO, Path.CURVE3, Path.CURVE3, Path.CLOSEPOLY]) 
+        self._base_vertices_cone = np.tile(v.reshape(-1),n).reshape(n, len(v), 2)
+        self._vertices_cone = np.tile(v.reshape(-1),n).reshape(n,len(v), 2)
+        self._codes_cone = np.tile(c.reshape(-1), n)
+
+        self._path_cone = Path(vertices=self._vertices_cone.reshape(n*len(v), 2), codes = self._codes_cone)
+
+        
+
+        self._collection = PathCollection([self._path,self._path_cone], linewidths=[0.5, 0.3],
+                                          facecolors=["k","b"], edgecolors=["w","b"])
 
     def update(self):
         n = len(self._base_vertices)
         self._vertices[...] = self._base_vertices * self._scale
-        cos_rotate, sin_rotate = np.cos(self._rotate), np.sin(self._rotate)
+        self._vertices_cone[...] = self._base_vertices_cone * self._scale
+
         R = np.empty((n, 2, 2))
-        R[:, 0, 0] = cos_rotate
-        R[:, 1, 0] = sin_rotate
-        R[:, 0, 1] = -sin_rotate
-        R[:, 1, 1] = cos_rotate
+        R[:, 0, 0] = self._rotate[:,0]
+        R[:, 1, 0] = self._rotate[:,1]
+        R[:, 0, 1] = -self._rotate[:,1]
+        R[:, 1, 1] = self._rotate[:,0]
+
         self._vertices[...] = np.einsum('ijk,ilk->ijl', self._vertices, R)
         self._vertices += self._translate.reshape(n, 1, 2)
 
+        self._vertices_cone[...] = np.einsum('ijk,ilk->ijl', self._vertices_cone, R)
+        self._vertices_cone += self._translate.reshape(n, 1, 2)
+
 
 def update(*args):
-    global flock, collection, trace, param_record
+    global flock, collection, param_record
 
     # record parameters
     if param_record:
@@ -154,8 +174,7 @@ def update(*args):
 
     collection._scale = 10
     collection._translate = flock.position
-    collection._rotate = -np.pi/2 + np.arctan2(flock.velocity[:, 1],
-                                               flock.velocity[:, 0])
+    collection._rotate[:,0],collection._rotate[:,1] = flock.velocity[:,1]/flock.args['v'],-flock.velocity[:,0]/flock.args['v']
     collection.update()
 
 
@@ -229,7 +248,7 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(10, 10*flock.args["height"]/flock.args["width"]), facecolor="white")
     ax = fig.add_axes([0.0, 0.0, 1.0, 1.0], aspect=1, frameon=False)
-    collection = MarkerCollection(flock.args["n"])
+    collection = MarkerCollection(flock.args["n"], flock.args["angle"], flock.args["radius"])
     ax.add_collection(collection._collection)
     ax.set_xlim(0, flock.args["width"])
     ax.set_ylim(0, flock.args["height"])

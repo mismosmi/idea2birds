@@ -27,7 +27,7 @@ class Flock:
         # test boid configuration
         if n<=3:
             self.position = np.array([[self.args["width"]/2+15,self.args["height"]/2],[self.args["width"]/2-15,self.args["height"]/2], [self.args["width"]/2,self.args["height"]/2+15]],dtype=np.float32)
-            self.velocity = np.array([[self.args["v"],0],[-self.args["v"],0],[self.args["v"],0]],dtype=np.float32)
+            self.velocity = np.array([[self.args["v"],0],[self.args["v"],0],[self.args["v"],0]],dtype=np.float32)
             self.position = self.position[0:n,:]
             self.velocity = self.velocity[0:n,:]
 
@@ -126,27 +126,40 @@ class MarkerCollection:
         self._path = Path(vertices=self._vertices.reshape(n*len(v), 2),
                           codes=self._codes)
 
-        # viewing cone
-        cos_ang = np.cos(angle/2)
-        sin_ang = np.sin(angle/2)
-        bl = np.tan(np.pi/8) * 4/3
-        v = np.array([(+0.0, +0.0), (-sin_ang*radius, cos_ang*radius), (-sin_ang*radius + cos_ang*bl, cos_ang*radius + sin_ang*bl), (sin_ang*radius, cos_ang*radius), (0,0)])
-        c = np.array([Path.MOVETO, Path.LINETO, Path.CURVE3, Path.CURVE3, Path.CLOSEPOLY]) 
-        self._base_vertices_cone = np.tile(v.reshape(-1),n).reshape(n, len(v), 2)
-        self._vertices_cone = np.tile(v.reshape(-1),n).reshape(n,len(v), 2)
-        self._codes_cone = np.tile(c.reshape(-1), n)
 
-        self._path_cone = Path(vertices=self._vertices_cone.reshape(n*len(v), 2), codes = self._codes_cone)
+        self.cone = True if angle else False
 
-        
+        if self.cone:
 
-        self._collection = PathCollection([self._path,self._path_cone], linewidths=[0.5, 0.3],
-                                          facecolors=["k","b"], edgecolors=["w","b"])
+            # viewing cone
+            cos_ang = np.cos(angle/2)
+            sin_ang = np.sin(angle/2)
+            bl = np.tan(np.pi/8) * 4/3 * radius
+            v_cone = np.array([(+0.0, +0.0), 
+            (-sin_ang*radius, -cos_ang*radius), 
+            (-sin_ang*radius + -cos_ang*bl, -cos_ang*radius + sin_ang*bl), 
+            (sin_ang*radius + cos_ang*bl, -cos_ang*radius + sin_ang*bl), 
+            (sin_ang*radius, -cos_ang*radius), 
+            (0,0)])
+            c_cone = np.array([Path.MOVETO, Path.LINETO, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CLOSEPOLY]) 
+            self._base_vertices_cone = np.tile(v_cone.reshape(-1),n).reshape(n, len(v_cone), 2)
+            self._vertices_cone = np.tile(v_cone.reshape(-1),n).reshape(n,len(v_cone), 2)
+            self._codes_cone = np.tile(c_cone.reshape(-1), n)
+
+            self._path_cone = Path(vertices=self._vertices_cone.reshape(n*len(v_cone), 2), codes = self._codes_cone)
+
+            
+
+            self._collection = PathCollection([self._path,self._path_cone], linewidths=[0.5, 0.1],
+                                              facecolors=["k",(0,0,0,0)], edgecolors=["w","b"])
+        else:
+            self._collection = PathCollection([self._path], linewidth=0.5, facecolor="k", edgecolor="w")
 
     def update(self):
         n = len(self._base_vertices)
         self._vertices[...] = self._base_vertices * self._scale
-        self._vertices_cone[...] = self._base_vertices_cone * self._scale
+        if self.cone:
+            self._vertices_cone[...] = self._base_vertices_cone * self._scale
 
         R = np.empty((n, 2, 2))
         R[:, 0, 0] = self._rotate[:,0]
@@ -157,8 +170,9 @@ class MarkerCollection:
         self._vertices[...] = np.einsum('ijk,ilk->ijl', self._vertices, R)
         self._vertices += self._translate.reshape(n, 1, 2)
 
-        self._vertices_cone[...] = np.einsum('ijk,ilk->ijl', self._vertices_cone, R)
-        self._vertices_cone += self._translate.reshape(n, 1, 2)
+        if self.cone:
+            self._vertices_cone[...] = np.einsum('ijk,ilk->ijl', self._vertices_cone, R)
+            self._vertices_cone += self._translate.reshape(n, 1, 2)
 
 
 def update(*args):
@@ -231,6 +245,7 @@ if __name__ == '__main__':
     parser.add_argument("--n", "-n", help="Number of boids, default="+str(defaults["n"]),type=int, default=defaults["n"])
     parser.add_argument("--eta", help="Generates Angles -eta/2 < delta Theta < eta/2, default="+str(defaults["eta"]), type=float, default=defaults["eta"])
     parser.add_argument("--radius", "-r", help="Viewing Radius, default="+str(defaults["radius"]), type=float, default=defaults["radius"])
+    parser.add_argument("--cone", help="Display the viewing angle as a cone", action="store_true")
     parser.add_argument("--export", "-e", help="Export video file and exit", action="store_true")
     parser.add_argument("--frames", help="Number of frames for export to video or parameter record file, default="+str(defaults["frames"]), type=int, default=defaults["frames"])
     parser.add_argument("--vfile", help="Out-File for video export, default="+str(defaults["vfile"]), type=str, default=defaults["vfile"])
@@ -248,7 +263,7 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(10, 10*flock.args["height"]/flock.args["width"]), facecolor="white")
     ax = fig.add_axes([0.0, 0.0, 1.0, 1.0], aspect=1, frameon=False)
-    collection = MarkerCollection(flock.args["n"], flock.args["angle"], flock.args["radius"])
+    collection = MarkerCollection(flock.args["n"], flock.args["angle"], flock.args["radius"]) if args.cone else MarkerCollection(flock.args["n"])
     ax.add_collection(collection._collection)
     ax.set_xlim(0, flock.args["width"])
     ax.set_ylim(0, flock.args["height"])

@@ -130,18 +130,50 @@ class MarkerCollection:
         self.cone = True if angle else False
 
         if self.cone:
+            
 
             # viewing cone
-            cos_ang = np.cos(angle/2)
-            sin_ang = np.sin(angle/2)
-            bl = np.tan(angle/4*np.pi) * 4/3 
-            v_cone = np.array([(+0.0, +0.0), 
-            (-sin_ang*radius, cos_ang*radius), 
-            (-sin_ang*radius + cos_ang*bl, cos_ang*radius + sin_ang*bl), 
-            (sin_ang*radius - cos_ang*bl, cos_ang*radius + sin_ang*bl), 
-            (sin_ang*radius, cos_ang*radius), 
-            (0,0)])
-            c_cone = np.array([Path.MOVETO, Path.LINETO, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CLOSEPOLY]) 
+            angles = [-angle/2, -angle/4, 0, angle/4, angle/2]
+            
+            #cos_ang = np.cos(angle/2)
+            #sin_ang = np.sin(angle/2)
+            #cos_ang2 = np.cos(angle/4)
+            #sin_ang2 = np.sin(angle/4)
+            bl = np.tan(angle/np.pi) * 4/3 * np.sqrt(radius)/np.pi
+            v_cone = []
+            for a in angles:
+                cos_ang = np.cos(a)
+                sin_ang = np.sin(a)
+                v_cone.append((sin_ang*radius -cos_ang*bl, cos_ang*radius +sin_ang*bl))
+                v_cone.append((sin_ang*radius, cos_ang*radius)) 
+                v_cone.append((sin_ang*radius +cos_ang*bl, cos_ang*radius -sin_ang*bl))
+            v_cone = np.array([(0,0)]+v_cone[1:-1]+[(0,0)])
+
+            #v_cone = np.array([(+0.0, +0.0), 
+
+            #    (-sin_ang*radius, cos_ang*radius), 
+            #    (-sin_ang*radius + cos_ang*bl, cos_ang*radius + sin_ang*bl), 
+
+            #    (-sin_ang2*radius -cos_ang2*bl, cos_ang2*radius -sin_ang2*bl),
+            #    (-sin_ang2*radius, cos_ang2*radius),
+            #    (0,0),
+            #    (-sin_ang2*radius, cos_ang2*radius),
+            #    (-sin_ang2*radius + cos_ang2*bl, cos_ang2*radius + sin_ang2*bl),
+
+            #    (-bl, radius), 
+            #    (0.,radius),
+            #    (bl, radius),
+
+            #    (sin_ang2*radius - cos_ang2*bl, cos_ang2*radius + sin_ang2*bl),
+            #    (sin_ang2*radius, cos_ang2*radius),
+            #    (sin_ang2*radius + cos_ang2*bl, cos_ang2*radius - sin_ang2*bl),
+
+            #    (sin_ang*radius - cos_ang*bl, cos_ang*radius + sin_ang*bl),
+            #    (sin_ang*radius, cos_ang*radius), 
+
+            #    (0,0)])
+            c_cone = np.array([Path.MOVETO, Path.LINETO, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CURVE4, Path.CLOSEPOLY]) 
+            #c_cone = np.array([Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]) 
             self._base_vertices_cone = np.tile(v_cone.reshape(-1),n).reshape(n, len(v_cone), 2)
             self._vertices_cone = np.tile(v_cone.reshape(-1),n).reshape(n,len(v_cone), 2)
             self._codes_cone = np.tile(c_cone.reshape(-1), n)
@@ -263,7 +295,7 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(10, 10*flock.args["height"]/flock.args["width"]), facecolor="white")
     ax = fig.add_axes([0.0, 0.0, 1.0, 1.0], aspect=1, frameon=False)
-    collection = MarkerCollection(flock.args["n"], flock.args["angle"], flock.args["radius"]) if args.cone else MarkerCollection(flock.args["n"])
+    collection = MarkerCollection(flock.args["n"], flock.args["angle"], flock.args["radius"]/10) if args.cone else MarkerCollection(flock.args["n"])
     ax.add_collection(collection._collection)
     ax.set_xlim(0, flock.args["width"])
     ax.set_ylim(0, flock.args["height"])
